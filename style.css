@@ -120,12 +120,22 @@ body {
 }
 
 /* 제목, 이름표, 목록, 개수는 한 줄을 다 차지 */
+.logo-photo,
 h1,
 #subtitle,
 .card > label,
 #todo-list,
 #counts {
   grid-column: 1 / -1;
+}
+
+/* 제목 위 로고 사진: 카드 폭을 넘지 않게 너비를 줄이고 모서리를 둥글게 */
+.logo-photo {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  border-radius: 12px;
 }
 
 h1 {
