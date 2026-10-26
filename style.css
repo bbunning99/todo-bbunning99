@@ -78,8 +78,8 @@ body {
   inset: 3%;
   border-radius: 50%;
   background: repeating-conic-gradient(from -0.4deg, var(--line) 0 0.8deg, transparent 0.8deg 15deg);
-  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 3cqw), #000 calc(50% - 3cqw));
-  mask: radial-gradient(circle, transparent 0 calc(50% - 3cqw), #000 calc(50% - 3cqw));
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 1.5cqw), #000 calc(50% - 1.5cqw));
+  mask: radial-gradient(circle, transparent 0 calc(50% - 1.5cqw), #000 calc(50% - 1.5cqw));
 }
 
 /* 가운데 점: 청록 네온 */
@@ -101,16 +101,16 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 8cqw;
-  height: 8cqw;
+  width: 6cqw;
+  height: 6cqw;
   display: grid;
   place-items: center;
-  margin: -4cqw 0 0 -4cqw;
+  margin: -3cqw 0 0 -3cqw;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 4.6cqw;
+  font-size: 4cqw;
   line-height: 1;
-  transform: rotate(calc(var(--i) * 15deg)) translateY(-37cqw) rotate(calc(var(--i) * -15deg));
+  transform: rotate(calc(var(--i) * 15deg)) translateY(-41.5cqw) rotate(calc(var(--i) * -15deg));
 }
 
 /* 0, 6, 12, 18은 조금 더 밝게 */
