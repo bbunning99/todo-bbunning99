@@ -46,42 +46,19 @@ function showError(what, error) {
   alert(what + ' 내용을 Supabase에 저장하지 못했어요. 인터넷 연결과 Supabase 설정을 확인해 주세요.');
 }
 
-// 표에 칸이 없는 것(걸리는 시간, 시계 시작 시각, 별표)은 이 브라우저에 할 일 id별로 따로 적어 둔다
-const EXTRAS_KEY = 'todo-extras';
+// 표에서 가져올 칸 (minutes: 걸리는 시간, start_minute: 시계 시작 시각, star: 즐겨찾기)
+const COLUMNS = 'id,text,done,created_at,minutes,start_minute,star';
 
-function loadExtras() {
-  try {
-    return JSON.parse(localStorage.getItem(EXTRAS_KEY)) || {};
-  } catch (error) {
-    return {};
-  }
-}
-
-let extras = loadExtras();
-
-// 지금 목록의 걸리는 시간·시작 시각·별표를 브라우저에 적는다
-function saveExtras() {
-  todos.forEach(function (todo) {
-    extras[todo.id] = { minutes: todo.minutes, start: todo.start, star: todo.star };
-  });
-  try {
-    localStorage.setItem(EXTRAS_KEY, JSON.stringify(extras));
-  } catch (error) {
-    // 저장이 안 돼도 화면은 그대로 쓸 수 있다
-  }
-}
-
-// 표의 한 줄(id, text, done, created_at)을 화면에서 쓰는 할 일로 바꾼다
+// 표의 한 줄을 화면에서 쓰는 할 일로 바꾼다
 function toTodo(row) {
-  const extra = extras[row.id] || {};
   return {
     id: row.id,
     text: row.text,
     done: row.done === true,
     created: Date.parse(row.created_at) || 0,
-    minutes: extra.minutes || 10,
-    start: typeof extra.start === 'number' ? extra.start : null,
-    star: typeof extra.star === 'number' ? extra.star : 0
+    minutes: row.minutes || 10,
+    start: typeof row.start_minute === 'number' ? row.start_minute : null,
+    star: typeof row.star === 'number' ? row.star : 0
   };
 }
 
@@ -271,12 +248,15 @@ addButton.addEventListener('click', async function () {
   todoInput.value = '';
   todoInput.focus();
   try {
-    const rows = await callSupabase('?select=id,text,done,created_at', 'POST', { text: text, done: false });
-    const todo = toTodo(rows[0]);
-    todo.minutes = minutes;
-    todos.push(todo);
+    const rows = await callSupabase('?select=' + COLUMNS, 'POST', {
+      text: text,
+      done: false,
+      minutes: minutes,
+      start_minute: null,
+      star: 0
+    });
+    todos.push(toTodo(rows[0]));
     sortTodos();
-    saveExtras();
     render();
   } catch (error) {
     todoInput.value = text;
@@ -309,6 +289,22 @@ todoList.addEventListener('change', async function (event) {
   }
 });
 
+// 즐겨찾기를 바꾸고 표에 저장한다. 화면을 먼저 바꾸고, 저장하지 못하면 되돌린다.
+async function saveStar(todo, star) {
+  const before = todo.star;
+  todo.star = star;
+  sortTodos();
+  render();
+  try {
+    await changeRow('PATCH', todo.id, { star: star });
+  } catch (error) {
+    todo.star = before;
+    sortTodos();
+    render();
+    showError('즐겨찾기', error);
+  }
+}
+
 // 별표 버튼: 중요 표시를 켜고 끈다 (켤 때는 지금까지 누른 번호보다 큰 번호를 붙인다)
 todoList.addEventListener('click', function (event) {
   const button = event.target.closest('.star-button');
@@ -317,10 +313,7 @@ todoList.addEventListener('click', function (event) {
     const biggest = Math.max(0, ...todos.map(function (item) {
       return item.star;
     }));
-    todo.star = todo.star > 0 ? 0 : biggest + 1;
-    sortTodos();
-    saveExtras();
-    render();
+    saveStar(todo, todo.star > 0 ? 0 : biggest + 1);
   }
 });
 
@@ -331,8 +324,6 @@ todoList.addEventListener('click', async function (event) {
     try {
       await changeRow('DELETE', todo.id);
       todos.splice(todos.indexOf(todo), 1);
-      delete extras[todo.id];
-      saveExtras();
     } catch (error) {
       showError('삭제한', error);
     }
@@ -401,28 +392,45 @@ function onDragMove(event) {
   updateDrag();
 }
 
+// 시계 시작 시각을 바꾸고 표에 저장한다. 화면을 먼저 바꾸고, 저장하지 못하면 되돌린다.
+async function saveStart(todo, start) {
+  const before = todo.start;
+  todo.start = start;
+  render();
+  try {
+    await changeRow('PATCH', todo.id, { start_minute: start });
+  } catch (error) {
+    todo.start = before;
+    render();
+    showError('시계에 올린', error);
+  }
+}
+
 // 끝내기: 시계 안에서 놓았으면 그 시각을 저장한다. 띠를 시계 밖에서 놓으면 시계에서 뺀다.
 function endDrag(event, save) {
   cancelAnimationFrame(drag.frame);
   window.removeEventListener('pointermove', onDragMove);
   window.removeEventListener('pointerup', onDragUp);
   window.removeEventListener('pointercancel', onDragCancel);
+  let change = null; // 바뀐 게 있으면 { todo, start }
   if (save) {
     drag.x = event.clientX;
     drag.y = event.clientY;
     if (updateDrag()) {
-      todos[drag.index].start = preview.start;
-      saveExtras();
+      change = { todo: todos[drag.index], start: preview.start };
     } else if (drag.kind === 'arc') {
-      todos[drag.index].start = null;
-      saveExtras();
+      change = { todo: todos[drag.index], start: null };
     }
   }
   drag.ghost.remove();
   clockFace.classList.remove('clock-active');
   preview = null;
   drag = null;
-  render();
+  if (change && change.start !== change.todo.start) {
+    saveStart(change.todo, change.start);
+  } else {
+    render();
+  }
 }
 
 function onDragUp(event) {
@@ -488,7 +496,7 @@ render();
 
 async function loadFromSupabase() {
   try {
-    const rows = await callSupabase('?select=id,text,done,created_at&order=created_at.asc', 'GET');
+    const rows = await callSupabase('?select=' + COLUMNS + '&order=created_at.asc', 'GET');
     todos = rows.map(toTodo);
     sortTodos();
     render();
