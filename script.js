@@ -101,7 +101,7 @@ function makeItem(todo, index) {
 
   const time = document.createElement('span');
   time.className = 'todo-time';
-  time.textContent = todo.minutes + '분';
+  time.textContent = formatMinutes(todo.minutes);
 
   const starButton = document.createElement('button');
   starButton.type = 'button';
@@ -133,6 +133,16 @@ function makeItem(todo, index) {
     li.prepend(start);
   }
   return li;
+}
+
+// 걸리는 시간(분)을 '10분', '1시간', '1시간 30분'처럼 적는다
+function formatMinutes(minutes) {
+  if (minutes < 60) {
+    return minutes + '분';
+  }
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? hours + '시간' : hours + '시간 ' + rest + '분';
 }
 
 // 시작 시각(0시부터 흐른 분)을 '14:30'처럼 숫자만 적는다

@@ -362,7 +362,7 @@ h1 {
 /* 체크 상자와 글자: 글자를 눌러도 체크됨 */
 .todo-item {
   display: flex;
-  flex: 1 1 76px;
+  flex: 1 1 96px;
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -550,8 +550,8 @@ h1 {
   }
 }
 
-/* 아주 좁은 휴대폰: 입력칸은 한 줄 전체, 시간과 추가 버튼은 그 아래 */
-@media (max-width: 380px) {
+/* 좁은 휴대폰: 입력칸은 한 줄 전체, 시간과 추가 버튼은 그 아래 */
+@media (max-width: 430px) {
   #todo-input {
     grid-column: 1 / -1;
   }
