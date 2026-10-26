@@ -142,18 +142,19 @@ function makeItem(todo, index) {
   deleteButton.dataset.index = index;
 
   label.append(check, text);
-  // 오른쪽 묶음: 시작 시각(시계에 올린 것만), 걸리는 시간, 별표, 삭제
+  // 오른쪽 묶음: 걸리는 시간, 별표, 삭제
   const meta = document.createElement('span');
   meta.className = 'todo-meta';
+  meta.append(time, starButton, deleteButton);
+
+  li.append(handle, label, meta);
+  // 시작 시각(시계에 올린 것만)은 상자 바깥 왼쪽 공백에 보인다. 안 올렸으면 공백으로 둔다.
   if (todo.start !== null) {
     const start = document.createElement('span');
     start.className = 'todo-start';
     start.textContent = formatStart(todo.start);
-    meta.append(start);
+    li.prepend(start);
   }
-  meta.append(time, starButton, deleteButton);
-
-  li.append(handle, label, meta);
   return li;
 }
 

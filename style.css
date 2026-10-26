@@ -277,13 +277,18 @@ h1 {
   user-select: none;
 }
 
-/* 목록: 할 일마다 따로 떨어진 상자 */
+/* 목록: 할 일마다 따로 떨어진 상자. 왼쪽 3rem은 시작 시각을 적는 공백 */
 #todo-list {
   display: grid;
   gap: 8px;
   margin: 8px 0 0;
-  padding: 0;
+  padding: 0 0 0 3rem;
   list-style: none;
+}
+
+/* 상자를 기준으로 시작 시각을 상자 바깥에 놓는다 (:where는 다른 규칙을 이기지 않는다) */
+:where(#todo-list li) {
+  position: relative;
 }
 
 #todo-list li {
@@ -341,12 +346,17 @@ h1 {
   opacity: 0;
 }
 
-/* 시계에 올린 할 일의 시작 시각 */
+/* 시계에 올린 할 일의 시작 시각: 상자 바깥 왼쪽 공백에, 상자와 세로로 가운데 맞춤 */
 .todo-start {
-  flex-shrink: 0;
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-right: 8px;
+  transform: translateY(-50%);
   color: var(--neon);
   font-family: var(--mono);
   font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 /* 체크 상자와 글자: 글자를 눌러도 체크됨 */
@@ -522,6 +532,15 @@ h1 {
 
   .todo-meta {
     gap: 8px;
+  }
+
+  /* 상자 폭을 지키려고 왼쪽 공백을 조금 줄이고, 시작 시각이 카드 안쪽 여백으로 살짝 나오게 한다 */
+  #todo-list {
+    padding-left: 2.5rem;
+  }
+
+  .todo-start {
+    margin-right: 4px;
   }
 
   .star-button,
