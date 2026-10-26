@@ -78,8 +78,8 @@ body {
   inset: 3%;
   border-radius: 50%;
   background: repeating-conic-gradient(from -0.4deg, var(--line) 0 0.8deg, transparent 0.8deg 15deg);
-  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 0.8cqw), #000 calc(50% - 0.8cqw));
-  mask: radial-gradient(circle, transparent 0 calc(50% - 0.8cqw), #000 calc(50% - 0.8cqw));
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 0.4cqw), #000 calc(50% - 0.4cqw));
+  mask: radial-gradient(circle, transparent 0 calc(50% - 0.4cqw), #000 calc(50% - 0.4cqw));
 }
 
 /* 가운데 점: 청록 네온 */
