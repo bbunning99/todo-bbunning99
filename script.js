@@ -14,9 +14,9 @@ const STORAGE_KEY = 'todos';
 
 // 처음 열었을 때 보여 줄 목록
 const START_TODOS = [
-  { text: '영어', minutes: 10, start: null, done: false },
-  { text: '코딩', minutes: 10, start: null, done: false },
-  { text: '블렌더', minutes: 10, start: null, done: false }
+  { text: '영어', minutes: 10, start: null, star: 0, done: false },
+  { text: '코딩', minutes: 10, start: null, star: 0, done: false },
+  { text: '블렌더', minutes: 10, start: null, star: 0, done: false }
 ];
 
 // 저장된 목록을 꺼낸다. 없으면 처음 목록을 쓴다.
@@ -30,6 +30,7 @@ function loadTodos() {
           text: todo.text,
           minutes: todo.minutes || 10,
           start: typeof todo.start === 'number' ? todo.start : null,
+          star: typeof todo.star === 'number' ? todo.star : 0,
           done: todo.done
         };
       });
@@ -38,7 +39,7 @@ function loadTodos() {
     // 저장소를 못 쓰는 브라우저면 처음 목록으로 시작한다
   }
   return START_TODOS.map(function (todo) {
-    return { text: todo.text, minutes: todo.minutes, start: todo.start, done: todo.done };
+    return { text: todo.text, minutes: todo.minutes, start: todo.start, star: todo.star, done: todo.done };
   });
 }
 
@@ -80,6 +81,14 @@ function makeItem(todo, index) {
   time.className = 'todo-time';
   time.textContent = todo.minutes + '분';
 
+  const starButton = document.createElement('button');
+  starButton.type = 'button';
+  starButton.className = 'star-button' + (todo.star > 0 ? ' on' : '');
+  starButton.setAttribute('aria-label', '중요 표시');
+  starButton.setAttribute('aria-pressed', todo.star > 0 ? 'true' : 'false');
+  starButton.textContent = todo.star > 0 ? '★' : '☆';
+  starButton.dataset.index = index;
+
   const deleteButton = document.createElement('button');
   deleteButton.type = 'button';
   deleteButton.className = 'delete-button';
@@ -88,14 +97,18 @@ function makeItem(todo, index) {
   deleteButton.dataset.index = index;
 
   label.append(check, text);
-  li.append(handle, label);
+  // 오른쪽 묶음: 시작 시각(시계에 올린 것만), 걸리는 시간, 별표, 삭제
+  const meta = document.createElement('span');
+  meta.className = 'todo-meta';
   if (todo.start !== null) {
     const start = document.createElement('span');
     start.className = 'todo-start';
     start.textContent = formatStart(todo.start);
-    li.append(start);
+    meta.append(start);
   }
-  li.append(time, deleteButton);
+  meta.append(time, starButton, deleteButton);
+
+  li.append(handle, label, meta);
   return li;
 }
 
@@ -197,7 +210,7 @@ addButton.addEventListener('click', function () {
     todoInput.focus();
     return;
   }
-  todos.push({ text: text, minutes: Number(timeSelect.value), start: null, done: false });
+  todos.push({ text: text, minutes: Number(timeSelect.value), start: null, star: 0, done: false });
   saveTodos();
   render();
   todoInput.value = '';
@@ -219,6 +232,20 @@ todoList.addEventListener('change', function (event) {
   if (event.target.classList.contains('done-check')) {
     const index = Number(event.target.dataset.index);
     todos[index].done = event.target.checked;
+    saveTodos();
+    render();
+  }
+});
+
+// 별표 버튼: 중요 표시를 켜고 끈다 (켤 때는 지금까지 누른 번호보다 큰 번호를 붙인다)
+todoList.addEventListener('click', function (event) {
+  const button = event.target.closest('.star-button');
+  if (button) {
+    const todo = todos[Number(button.dataset.index)];
+    const biggest = Math.max(0, ...todos.map(function (item) {
+      return item.star;
+    }));
+    todo.star = todo.star > 0 ? 0 : biggest + 1;
     saveTodos();
     render();
   }

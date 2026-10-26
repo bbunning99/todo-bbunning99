@@ -277,12 +277,21 @@ h1 {
 
 #todo-list li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   padding: 10px 12px 10px 16px;
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: 8px;
+}
+
+/* 오른쪽 묶음: 아주 좁은 화면에서는 통째로 제목 아래 줄로 내려간다 */
+.todo-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
 }
 
 /* 끌고 갈 손잡이: 휴대폰에서도 끌 수 있게 화면이 따라 움직이지 않게 한다 */
@@ -332,7 +341,7 @@ h1 {
 /* 체크 상자와 글자: 글자를 눌러도 체크됨 */
 .todo-item {
   display: flex;
-  flex: 1;
+  flex: 1 1 76px;
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -393,6 +402,36 @@ h1 {
   color: var(--muted);
   font-family: var(--mono);
   font-size: 0.85rem;
+}
+
+/* 별표 버튼: 평소엔 속이 빈 흐린 별, 중요 표시를 하면 청록 포인트색의 찬 별 */
+.star-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.star-button:hover,
+.star-button:focus-visible {
+  outline: none;
+  border-color: var(--neon);
+  color: var(--neon);
+}
+
+.star-button.on {
+  border-color: var(--neon);
+  color: var(--neon);
+  text-shadow: var(--glow);
 }
 
 /* 삭제 버튼: 평소엔 흐리게, 손을 대면 청록으로 */
@@ -462,6 +501,22 @@ h1 {
 
   #add-button {
     padding: 12px 14px;
+  }
+
+  /* 상자 안이 좁아서 간격과 버튼을 조금 줄인다 */
+  #todo-list li {
+    gap: 8px;
+    padding: 10px 8px 10px 12px;
+  }
+
+  .todo-meta {
+    gap: 8px;
+  }
+
+  .star-button,
+  .delete-button {
+    width: 30px;
+    height: 30px;
   }
 }
 
