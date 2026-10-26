@@ -34,12 +34,12 @@ body {
   line-height: 1.5;
 }
 
-/* 제목, 이름표, 목록, 남은 개수는 한 줄을 다 차지 */
+/* 제목, 이름표, 목록, 개수는 한 줄을 다 차지 */
 h1,
 #subtitle,
-label,
+body > label,
 #todo-list,
-#remaining {
+#counts {
   grid-column: 1 / -1;
 }
 
@@ -66,7 +66,7 @@ h1 {
   color: var(--text);
 }
 
-label {
+body > label {
   color: var(--muted);
   font-size: 0.9rem;
 }
@@ -125,10 +125,34 @@ label {
   border-bottom: 1px solid var(--line);
 }
 
-.todo-text {
+/* 체크 상자와 글자: 글자를 눌러도 체크됨 */
+.todo-item {
+  display: flex;
   flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.done-check {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--neon);
+  cursor: pointer;
+}
+
+.todo-text {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* 완료한 일: 가운뎃줄, 흐리게 */
+.done-check:checked + .todo-text {
+  color: var(--muted);
+  text-decoration: line-through;
 }
 
 /* 삭제 버튼: 평소엔 흐리게, 손을 대면 청록으로 */
@@ -153,14 +177,30 @@ label {
   border-bottom: none;
 }
 
-/* 남은 개수: 고정폭 글꼴 */
-#remaining {
-  margin: 4px 0 0;
+/* 남은 개수는 왼쪽, 완료 개수는 오른쪽에 나란히 */
+#counts {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
   padding-top: 16px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-family: var(--mono);
   font-size: 0.9rem;
+}
+
+#counts p {
+  margin: 0;
+}
+
+#done {
+  text-align: right;
+}
+
+/* 숫자: 고정폭 글꼴 */
+.count {
+  font-family: var(--mono);
+  color: var(--text);
 }
 
 /* 휴대폰 폭 */
