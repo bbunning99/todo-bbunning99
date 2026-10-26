@@ -18,7 +18,7 @@ html {
   background: var(--bg);
 }
 
-/* 페이지: 시계판과 할 일 카드를 따로 놓는다 (휴대폰은 위아래, 넓은 화면은 나란히) */
+/* 페이지: 맨 위 로고, 그 아래 할 일 카드와 시계판 */
 body {
   display: flex;
   flex-direction: column;
@@ -31,8 +31,17 @@ body {
   line-height: 1.5;
 }
 
+/* 할 일 카드와 시계판: 좁은 화면은 위아래(카드 위, 시계 아래), 넓은 화면은 나란히(카드 왼쪽, 시계 오른쪽) */
+.board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+}
+
 @media (min-width: 1000px) {
-  body {
+  .board {
     flex-direction: row;
     justify-content: center;
     align-items: flex-start;
@@ -120,7 +129,6 @@ body {
 }
 
 /* 제목, 이름표, 목록, 개수는 한 줄을 다 차지 */
-.logo-photo,
 h1,
 #subtitle,
 .card > label,
@@ -129,13 +137,19 @@ h1,
   grid-column: 1 / -1;
 }
 
-/* 제목 위 로고 사진: 카드 폭을 넘지 않게 너비를 줄이고 모서리를 둥글게 */
+/* 맨 위 로고 사진: 카드·시계가 세로로 쌓였을 땐 화면 폭 가득 아주 크게(최대 760px), 가로로 나란할 땐 크게(최대 520px) */
 .logo-photo {
   display: block;
   width: 100%;
-  max-width: 220px;
+  max-width: 760px;
   height: auto;
   border-radius: 12px;
+}
+
+@media (min-width: 1000px) {
+  .logo-photo {
+    max-width: 520px;
+  }
 }
 
 h1 {
