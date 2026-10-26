@@ -46,21 +46,24 @@
 
     <label for="todo-input">할 일</label>
     <input type="text" id="todo-input" placeholder="할 일을 적어 주세요">
-    <select id="time-select" aria-label="걸리는 시간">
-      <option value="10">10분</option>
-      <option value="20">20분</option>
-      <option value="30">30분</option>
-      <option value="40">40분</option>
-      <option value="50">50분</option>
-      <option value="60">1시간</option>
-      <option value="90">1시간 30분</option>
-      <option value="120">2시간</option>
-      <option value="150">2시간 30분</option>
-      <option value="180">3시간</option>
-      <option value="210">3시간 30분</option>
-      <option value="240">4시간</option>
-      <option value="480">8시간</option>
-    </select>
+    <div class="combo" id="time-combo">
+      <button type="button" id="time-select" class="combo-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="time-list" aria-label="걸리는 시간">10분</button>
+      <ul id="time-list" class="combo-list" role="listbox" aria-label="걸리는 시간" hidden>
+      <li role="option" data-value="10" aria-selected="true">10분</li>
+      <li role="option" data-value="20" aria-selected="false">20분</li>
+      <li role="option" data-value="30" aria-selected="false">30분</li>
+      <li role="option" data-value="40" aria-selected="false">40분</li>
+      <li role="option" data-value="50" aria-selected="false">50분</li>
+      <li role="option" data-value="60" aria-selected="false">1시간</li>
+      <li role="option" data-value="90" aria-selected="false">1시간 30분</li>
+      <li role="option" data-value="120" aria-selected="false">2시간</li>
+      <li role="option" data-value="150" aria-selected="false">2시간 30분</li>
+      <li role="option" data-value="180" aria-selected="false">3시간</li>
+      <li role="option" data-value="210" aria-selected="false">3시간 30분</li>
+      <li role="option" data-value="240" aria-selected="false">4시간</li>
+      <li role="option" data-value="480" aria-selected="false">8시간</li>
+      </ul>
+    </div>
     <button type="button" id="add-button">추가</button>
 
     <ul id="todo-list">

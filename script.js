@@ -1,6 +1,8 @@
 // 화면에서 쓸 것들을 찾아 둔다
 const todoInput = document.getElementById('todo-input');
-const timeSelect = document.getElementById('time-select');
+const timeSelect = document.getElementById('time-select'); // 걸리는 시간 콤보 박스의 버튼
+const timeCombo = document.getElementById('time-combo');
+const timeList = document.getElementById('time-list');
 const addButton = document.getElementById('add-button');
 const todoList = document.getElementById('todo-list');
 const remainingCount = document.getElementById('remaining-count');
@@ -254,7 +256,7 @@ addButton.addEventListener('click', async function () {
     todoInput.focus();
     return;
   }
-  const minutes = Number(timeSelect.value);
+  const minutes = selectedMinutes();
   todoInput.value = '';
   todoInput.focus();
   try {
@@ -274,13 +276,131 @@ addButton.addEventListener('click', async function () {
   }
 });
 
-// 시간 드롭다운 위에서 휠을 굴리면 10분씩 바꾼다 (아래로 굴리면 늘고, 위로 굴리면 준다)
+// ---- 걸리는 시간 콤보 박스 ----
+const timeOptions = Array.from(timeList.querySelectorAll('[role="option"]'));
+let timeIndex = 0; // 고른 칸 (처음 값은 10분)
+let activeIndex = 0; // 열린 목록에서 짚고 있는 칸
+
+// 고른 시간(분)
+function selectedMinutes() {
+  return Number(timeOptions[timeIndex].dataset.value);
+}
+
+// 한 칸을 고른다
+function chooseTime(index) {
+  timeIndex = index;
+  timeOptions.forEach(function (option, i) {
+    option.setAttribute('aria-selected', i === index ? 'true' : 'false');
+  });
+  timeSelect.textContent = timeOptions[index].textContent;
+}
+
+// 열린 목록에서 짚고 있는 칸을 표시하고, 안 보이면 스크롤해서 보이게 한다
+function markActive(index) {
+  activeIndex = index;
+  timeOptions.forEach(function (option, i) {
+    option.classList.toggle('active', i === index);
+  });
+  const option = timeOptions[index];
+  const top = option.offsetTop;
+  const bottom = top + option.offsetHeight;
+  if (top < timeList.scrollTop) {
+    timeList.scrollTop = top;
+  } else if (bottom > timeList.scrollTop + timeList.clientHeight) {
+    timeList.scrollTop = bottom - timeList.clientHeight;
+  }
+}
+
+function openTimeList() {
+  timeList.hidden = false;
+  timeSelect.setAttribute('aria-expanded', 'true');
+  // 아래로 펼치면 화면 밖으로 나가는데 위에 자리가 더 있으면 위로 펼친다
+  timeList.classList.remove('up');
+  const button = timeSelect.getBoundingClientRect();
+  const below = window.innerHeight - button.bottom;
+  if (below < timeList.offsetHeight + 4 && button.top > below) {
+    timeList.classList.add('up');
+  }
+  // 고른 칸이 목록 가운데쯤 보이게 한다
+  const option = timeOptions[timeIndex];
+  timeList.scrollTop = Math.max(0, option.offsetTop - (timeList.clientHeight - option.offsetHeight) / 2);
+  markActive(timeIndex);
+}
+
+function closeTimeList() {
+  timeList.hidden = true;
+  timeSelect.setAttribute('aria-expanded', 'false');
+}
+
+// 콤보 박스를 누르면 목록이 열리고, 다시 누르면 닫힌다
+timeSelect.addEventListener('click', function () {
+  if (timeList.hidden) {
+    openTimeList();
+  } else {
+    closeTimeList();
+  }
+});
+
+// 목록에서 하나를 고르면 닫힌다
+timeList.addEventListener('click', function (event) {
+  const option = event.target.closest('[role="option"]');
+  if (option) {
+    chooseTime(timeOptions.indexOf(option));
+    closeTimeList();
+    timeSelect.focus();
+  }
+});
+
+timeList.addEventListener('mouseover', function (event) {
+  const option = event.target.closest('[role="option"]');
+  if (option) {
+    timeOptions.forEach(function (item) {
+      item.classList.toggle('active', item === option);
+    });
+    activeIndex = timeOptions.indexOf(option);
+  }
+});
+
+// 바깥을 누르면 닫힌다
+document.addEventListener('click', function (event) {
+  if (!timeList.hidden && !timeCombo.contains(event.target)) {
+    closeTimeList();
+  }
+});
+
+// 키보드: 위·아래 화살표로 고르고, Enter로 정하고, Esc로 닫는다
+timeCombo.addEventListener('keydown', function (event) {
+  const open = !timeList.hidden;
+  if (event.key === 'Escape' && open) {
+    event.preventDefault();
+    closeTimeList();
+    timeSelect.focus();
+  } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    const step = event.key === 'ArrowDown' ? 1 : -1;
+    if (open) {
+      markActive(Math.min(timeOptions.length - 1, Math.max(0, activeIndex + step)));
+    } else {
+      chooseTime(Math.min(timeOptions.length - 1, Math.max(0, timeIndex + step)));
+    }
+  } else if (event.key === 'Enter' && open) {
+    event.preventDefault();
+    chooseTime(activeIndex);
+    closeTimeList();
+  } else if (event.key === 'Tab' && open) {
+    closeTimeList();
+  }
+});
+
+// 콤보 박스 위에서 휠을 굴리면 한 칸씩 바꾼다 (아래로 굴리면 다음 칸, 위로 굴리면 이전 칸)
 timeSelect.addEventListener('wheel', function (event) {
   event.preventDefault(); // 페이지가 같이 스크롤되지 않게 막는다
-  const step = event.deltaY > 0 ? 1 : -1;
-  const next = timeSelect.selectedIndex + step;
-  if (next >= 0 && next < timeSelect.options.length) {
-    timeSelect.selectedIndex = next;
+  const next = timeIndex + (event.deltaY > 0 ? 1 : -1);
+  if (next >= 0 && next < timeOptions.length) {
+    chooseTime(next);
+    if (!timeList.hidden) {
+      markActive(next);
+    }
   }
 }, { passive: false });
 

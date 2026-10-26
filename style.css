@@ -177,8 +177,18 @@ h1 {
   box-shadow: var(--glow);
 }
 
-/* 걸리는 시간 드롭다운: 입력칸과 같은 모양 */
-#time-select {
+/* 걸리는 시간 콤보 박스: 닫혀 있을 땐 입력칸과 같은 모양, 열면 선택지가 5개까지만 보이고 스크롤바로 내린다 */
+.combo {
+  position: relative;
+  width: 8rem;
+}
+
+.combo-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
   padding: 12px 8px;
   background: var(--bg);
   border: 1px solid var(--line);
@@ -186,17 +196,88 @@ h1 {
   color: var(--text);
   font-family: var(--mono);
   font-size: 1rem;
+  text-align: left;
   cursor: pointer;
 }
 
-#time-select:hover,
-#time-select:focus {
+.combo-button::after {
+  content: "▾";
+  color: var(--muted);
+  font-size: 0.8em;
+}
+
+.combo-button:hover,
+.combo-button:focus-visible,
+.combo-button[aria-expanded="true"] {
   outline: none;
   border-color: var(--neon);
 }
 
-#time-select:focus {
+.combo-button:focus-visible,
+.combo-button[aria-expanded="true"] {
   box-shadow: var(--glow);
+}
+
+/* 선택지 목록: 한 칸 36px, 최대 5칸(180px)까지만 보이게 하고 넘치면 스크롤 */
+.combo-list {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 4px);
+  left: 0;
+  box-sizing: border-box;
+  min-width: 100%;
+  max-height: calc(5 * 36px + 2px);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  background: var(--card);
+  border: 1px solid var(--neon);
+  border-radius: 8px;
+  box-shadow: var(--glow);
+  scrollbar-width: thin;
+  scrollbar-color: var(--neon) var(--bg);
+}
+
+/* 화면 아래에 자리가 모자라면 위로 펼친다 */
+.combo-list.up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+.combo-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.combo-list::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+.combo-list::-webkit-scrollbar-thumb {
+  background: var(--neon);
+  border-radius: 4px;
+}
+
+.combo-list li {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 36px;
+  padding: 0 12px;
+  color: var(--text);
+  font-family: var(--mono);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.combo-list li:hover,
+.combo-list li.active {
+  background: var(--line);
+}
+
+.combo-list li[aria-selected="true"] {
+  color: var(--neon);
 }
 
 #add-button {
@@ -516,10 +597,6 @@ h1 {
     padding: 12px 10px;
   }
 
-  #time-select {
-    padding: 12px 4px;
-  }
-
   #add-button {
     padding: 12px 14px;
   }
@@ -556,7 +633,8 @@ h1 {
     grid-column: 1 / -1;
   }
 
-  #time-select {
+  .combo {
     grid-column: 1 / 3;
+    width: auto;
   }
 }
