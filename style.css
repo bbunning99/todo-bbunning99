@@ -118,8 +118,35 @@ label {
 }
 
 #todo-list li {
-  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 16px;
   border-bottom: 1px solid var(--line);
+}
+
+.todo-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* 삭제 버튼: 평소엔 흐리게, 손을 대면 청록으로 */
+.delete-button {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.delete-button:hover,
+.delete-button:focus-visible {
+  outline: none;
+  border-color: var(--neon);
+  color: var(--neon);
 }
 
 #todo-list li:last-child {
