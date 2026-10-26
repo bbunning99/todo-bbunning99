@@ -114,6 +114,16 @@ addButton.addEventListener('click', function () {
   todoInput.focus();
 });
 
+// 시간 드롭다운 위에서 휠을 굴리면 10분씩 바꾼다 (아래로 굴리면 늘고, 위로 굴리면 준다)
+timeSelect.addEventListener('wheel', function (event) {
+  event.preventDefault(); // 페이지가 같이 스크롤되지 않게 막는다
+  const step = event.deltaY > 0 ? 1 : -1;
+  const next = timeSelect.selectedIndex + step;
+  if (next >= 0 && next < timeSelect.options.length) {
+    timeSelect.selectedIndex = next;
+  }
+}, { passive: false });
+
 // 체크 상자: 완료 ↔ 안 함을 바꾼다
 todoList.addEventListener('change', function (event) {
   if (event.target.classList.contains('done-check')) {
