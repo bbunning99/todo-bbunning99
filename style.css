@@ -1,0 +1,129 @@
+/* 네온 다크: 거의 검은 바탕, 얇은 선 카드, 청록 네온 강조 하나 */
+:root {
+  --bg: #0a0b0d;          /* 거의 검은 바탕 */
+  --card: #111317;        /* 카드 바탕 */
+  --line: #23272e;        /* 얇은 선 */
+  --text: #e6e8eb;        /* 글자 */
+  --muted: #8a919c;       /* 흐린 글자 */
+  --neon: #00f0d8;        /* 청록 네온 (강조색은 이것 하나) */
+  --glow: 0 0 8px rgba(0, 240, 216, 0.6);
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+}
+
+/* 페이지 전체를 하나의 카드로 */
+body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  max-width: 480px;
+  margin: 32px auto;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  line-height: 1.5;
+}
+
+/* 제목, 이름표, 목록, 남은 개수는 한 줄을 다 차지 */
+h1,
+label,
+#todo-list,
+#remaining {
+  grid-column: 1 / -1;
+}
+
+h1 {
+  margin: 0 0 4px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.3rem;
+  word-break: keep-all;
+}
+
+label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* 입력칸과 추가 버튼은 한 줄에 나란히 */
+#todo-input {
+  min-width: 0;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+#todo-input::placeholder {
+  color: var(--muted);
+}
+
+#todo-input:focus {
+  outline: none;
+  border-color: var(--neon);
+  box-shadow: var(--glow);
+}
+
+#add-button {
+  padding: 12px 20px;
+  background: transparent;
+  border: 1px solid var(--neon);
+  border-radius: 8px;
+  color: var(--neon);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+#add-button:hover,
+#add-button:focus-visible {
+  outline: none;
+  box-shadow: var(--glow);
+}
+
+/* 목록: 얇은 선으로 나눈 칸 */
+#todo-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+#todo-list li {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+#todo-list li:last-child {
+  border-bottom: none;
+}
+
+/* 남은 개수: 고정폭 글꼴 */
+#remaining {
+  margin: 4px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.9rem;
+}
+
+/* 휴대폰 폭 */
+@media (max-width: 520px) {
+  body {
+    margin: 16px;
+    padding: 20px 16px;
+  }
+}
