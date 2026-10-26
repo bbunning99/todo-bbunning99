@@ -10,76 +10,81 @@
   <img class="logo-photo" src="https://ymbassdoclbsfdqwchit.supabase.co/storage/v1/object/public/Photos/todo-logo-raw.png.png" alt="할 일 목록 로고">
 
   <div class="board">
-    <main class="card">
-      <h1>할 일 목록</h1>
-      <p id="subtitle" contenteditable="true" spellcheck="false">(이번 주 공부할 것)</p>
+    <div class="todo-panel">
+      <button type="button" id="fold-button" class="fold-button" aria-expanded="true" aria-controls="todo-card" aria-label="할 일 목록 접기" title="할 일 목록 접기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7"/></svg>
+      </button>
+      <main class="card" id="todo-card">
+        <h1>할 일 목록</h1>
+        <p id="subtitle" contenteditable="true" spellcheck="false">(이번 주 공부할 것)</p>
 
-      <label for="todo-input">할 일</label>
-      <input type="text" id="todo-input" placeholder="할 일을 적어 주세요">
-      <div class="combo" id="time-combo">
-        <button type="button" id="time-select" class="combo-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="time-list" aria-label="걸리는 시간">10분</button>
-        <ul id="time-list" class="combo-list" role="listbox" aria-label="걸리는 시간" hidden>
-        <li role="option" data-value="10" aria-selected="true">10분</li>
-        <li role="option" data-value="20" aria-selected="false">20분</li>
-        <li role="option" data-value="30" aria-selected="false">30분</li>
-        <li role="option" data-value="40" aria-selected="false">40분</li>
-        <li role="option" data-value="50" aria-selected="false">50분</li>
-        <li role="option" data-value="60" aria-selected="false">1시간</li>
-        <li role="option" data-value="90" aria-selected="false">1시간 30분</li>
-        <li role="option" data-value="120" aria-selected="false">2시간</li>
-        <li role="option" data-value="150" aria-selected="false">2시간 30분</li>
-        <li role="option" data-value="180" aria-selected="false">3시간</li>
-        <li role="option" data-value="210" aria-selected="false">3시간 30분</li>
-        <li role="option" data-value="240" aria-selected="false">4시간</li>
-        <li role="option" data-value="480" aria-selected="false">8시간</li>
+        <label for="todo-input">할 일</label>
+        <input type="text" id="todo-input" placeholder="할 일을 적어 주세요">
+        <div class="combo" id="time-combo">
+          <button type="button" id="time-select" class="combo-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="time-list" aria-label="걸리는 시간">10분</button>
+          <ul id="time-list" class="combo-list" role="listbox" aria-label="걸리는 시간" hidden>
+          <li role="option" data-value="10" aria-selected="true">10분</li>
+          <li role="option" data-value="20" aria-selected="false">20분</li>
+          <li role="option" data-value="30" aria-selected="false">30분</li>
+          <li role="option" data-value="40" aria-selected="false">40분</li>
+          <li role="option" data-value="50" aria-selected="false">50분</li>
+          <li role="option" data-value="60" aria-selected="false">1시간</li>
+          <li role="option" data-value="90" aria-selected="false">1시간 30분</li>
+          <li role="option" data-value="120" aria-selected="false">2시간</li>
+          <li role="option" data-value="150" aria-selected="false">2시간 30분</li>
+          <li role="option" data-value="180" aria-selected="false">3시간</li>
+          <li role="option" data-value="210" aria-selected="false">3시간 30분</li>
+          <li role="option" data-value="240" aria-selected="false">4시간</li>
+          <li role="option" data-value="480" aria-selected="false">8시간</li>
+          </ul>
+        </div>
+        <button type="button" id="add-button">추가</button>
+
+        <ul id="todo-list">
+          <li>
+            <span class="drag-handle" aria-hidden="true">⋮⋮</span>
+            <label class="todo-item">
+              <input type="checkbox" class="done-check">
+              <span class="todo-text">영어</span>
+            </label>
+            <span class="todo-meta">
+              <span class="todo-time">10분</span>
+              <button type="button" class="star-button" aria-label="중요 표시" aria-pressed="false">☆</button>
+              <button type="button" class="delete-button" aria-label="삭제">×</button>
+            </span>
+          </li>
+          <li>
+            <span class="drag-handle" aria-hidden="true">⋮⋮</span>
+            <label class="todo-item">
+              <input type="checkbox" class="done-check">
+              <span class="todo-text">코딩</span>
+            </label>
+            <span class="todo-meta">
+              <span class="todo-time">10분</span>
+              <button type="button" class="star-button" aria-label="중요 표시" aria-pressed="false">☆</button>
+              <button type="button" class="delete-button" aria-label="삭제">×</button>
+            </span>
+          </li>
+          <li>
+            <span class="drag-handle" aria-hidden="true">⋮⋮</span>
+            <label class="todo-item">
+              <input type="checkbox" class="done-check">
+              <span class="todo-text">블렌더</span>
+            </label>
+            <span class="todo-meta">
+              <span class="todo-time">10분</span>
+              <button type="button" class="star-button" aria-label="중요 표시" aria-pressed="false">☆</button>
+              <button type="button" class="delete-button" aria-label="삭제">×</button>
+            </span>
+          </li>
         </ul>
-      </div>
-      <button type="button" id="add-button">추가</button>
 
-      <ul id="todo-list">
-        <li>
-          <span class="drag-handle" aria-hidden="true">⋮⋮</span>
-          <label class="todo-item">
-            <input type="checkbox" class="done-check">
-            <span class="todo-text">영어</span>
-          </label>
-          <span class="todo-meta">
-            <span class="todo-time">10분</span>
-            <button type="button" class="star-button" aria-label="중요 표시" aria-pressed="false">☆</button>
-            <button type="button" class="delete-button" aria-label="삭제">×</button>
-          </span>
-        </li>
-        <li>
-          <span class="drag-handle" aria-hidden="true">⋮⋮</span>
-          <label class="todo-item">
-            <input type="checkbox" class="done-check">
-            <span class="todo-text">코딩</span>
-          </label>
-          <span class="todo-meta">
-            <span class="todo-time">10분</span>
-            <button type="button" class="star-button" aria-label="중요 표시" aria-pressed="false">☆</button>
-            <button type="button" class="delete-button" aria-label="삭제">×</button>
-          </span>
-        </li>
-        <li>
-          <span class="drag-handle" aria-hidden="true">⋮⋮</span>
-          <label class="todo-item">
-            <input type="checkbox" class="done-check">
-            <span class="todo-text">블렌더</span>
-          </label>
-          <span class="todo-meta">
-            <span class="todo-time">10분</span>
-            <button type="button" class="star-button" aria-label="중요 표시" aria-pressed="false">☆</button>
-            <button type="button" class="delete-button" aria-label="삭제">×</button>
-          </span>
-        </li>
-      </ul>
-
-      <div id="counts">
-        <p id="remaining">남은 할 일: <span class="count" id="remaining-count">3</span>개 (<span class="count" id="remaining-time">30</span>분)</p>
-        <p id="done">완료한 일: <span class="count" id="done-count">0</span>개</p>
-      </div>
-    </main>
+        <div id="counts">
+          <p id="remaining">남은 할 일: <span class="count" id="remaining-count">3</span>개 (<span class="count" id="remaining-time">30</span>분)</p>
+          <p id="done">완료한 일: <span class="count" id="done-count">0</span>개</p>
+        </div>
+      </main>
+    </div>
 
     <section class="clock" aria-label="24시간 시계판">
       <ol class="clock-face">

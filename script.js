@@ -11,6 +11,8 @@ const doneCount = document.getElementById('done-count');
 const clockFace = document.querySelector('.clock-face');
 const arcLayer = document.getElementById('clock-arcs');
 const sliceLayer = document.getElementById('clock-slices');
+const board = document.querySelector('.board');
+const foldButton = document.getElementById('fold-button');
 
 // ---- Supabase (todos 표) ----
 // 공개 키만 쓴다. 비밀 키는 이 파일에 절대 넣지 않는다.
@@ -637,3 +639,13 @@ async function loadFromSupabase() {
 }
 
 loadFromSupabase();
+
+// 체크 버튼: 할 일 카드를 접고 펼친다. 접으면 카드는 숨겨지고 시계판이 커진다. (새로고침하면 펼친 채로 시작)
+foldButton.addEventListener('click', function () {
+  const folded = !board.classList.contains('folded');
+  board.classList.toggle('folded', folded);
+  const label = folded ? '할 일 목록 열기' : '할 일 목록 접기';
+  foldButton.setAttribute('aria-expanded', folded ? 'false' : 'true');
+  foldButton.setAttribute('aria-label', label);
+  foldButton.title = label;
+});

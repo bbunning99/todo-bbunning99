@@ -49,6 +49,69 @@ body {
   }
 }
 
+/* 할 일 카드를 감싸는 칸: 접기 버튼이 카드 오른쪽 위에 붙는다 */
+.todo-panel {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+}
+
+/* 접기 버튼: 둥근 네모 안의 체크 표시. 펼쳤을 땐 작고 흐리게, 접었을 땐 크고 청록 빛으로 */
+.fold-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.board:not(.folded) .fold-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+}
+
+.fold-button svg {
+  width: 62%;
+  height: 62%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fold-button:hover,
+.fold-button:focus-visible {
+  outline: none;
+  color: var(--neon);
+  border-color: var(--neon);
+}
+
+/* 접힌 상태: 카드는 완전히 숨기고 체크 버튼만 남긴다 */
+.board.folded .todo-panel {
+  width: auto;
+}
+
+.board.folded .card {
+  display: none;
+}
+
+.board.folded .fold-button {
+  width: 56px;
+  height: 56px;
+  color: var(--neon);
+  border-color: var(--neon);
+  border-radius: 14px;
+  box-shadow: var(--glow);
+}
+
 /* 할 일 카드 */
 .card {
   display: grid;
@@ -68,6 +131,18 @@ body {
   width: 100%;
   max-width: 560px;
   container-type: inline-size;
+  transition: max-width 0.25s ease;
+}
+
+/* 카드를 접으면 시계판이 크게 */
+.board.folded .clock {
+  max-width: 760px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clock {
+    transition: none;
+  }
 }
 
 .clock-face {
