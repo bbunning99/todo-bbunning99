@@ -157,12 +157,18 @@ body > label {
 
 /* 삭제 버튼: 평소엔 흐리게, 손을 대면 청록으로 */
 .delete-button {
-  padding: 6px 12px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex-shrink: 0;
   background: transparent;
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 1.2rem;
+  line-height: 1;
   cursor: pointer;
 }
 
