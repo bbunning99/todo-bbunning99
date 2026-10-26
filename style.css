@@ -101,16 +101,16 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6cqw;
-  height: 6cqw;
+  width: 4.5cqw;
+  height: 4.5cqw;
   display: grid;
   place-items: center;
-  margin: -3cqw 0 0 -3cqw;
+  margin: -2.25cqw 0 0 -2.25cqw;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 4cqw;
+  font-size: 3cqw;
   line-height: 1;
-  transform: rotate(calc(var(--i) * 15deg)) translateY(-41.5cqw) rotate(calc(var(--i) * -15deg));
+  transform: rotate(calc(var(--i) * 15deg)) translateY(-43cqw) rotate(calc(var(--i) * -15deg));
 }
 
 /* 0, 6, 12, 18은 조금 더 밝게 */
