@@ -53,10 +53,10 @@ body {
   border-radius: 12px;
 }
 
-/* 24시간 시계판: 작은 원(150px), 0이 맨 위, 12가 맨 아래 */
+/* 24시간 시계판: 아주 큰 원, 0이 맨 위, 12가 맨 아래 */
 .clock {
   width: 100%;
-  max-width: 150px;
+  max-width: 560px;
   container-type: inline-size;
 }
 
