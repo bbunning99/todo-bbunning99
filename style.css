@@ -18,26 +18,110 @@ html {
   background: var(--bg);
 }
 
-/* 페이지 전체를 하나의 카드로 */
+/* 페이지: 시계판과 할 일 카드를 따로 놓는다 (휴대폰은 위아래, 넓은 화면은 나란히) */
 body {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 12px;
-  max-width: 480px;
-  margin: 32px auto;
-  padding: 24px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  margin: 0;
+  padding: 32px 16px;
   color: var(--text);
   font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   line-height: 1.5;
 }
 
+@media (min-width: 1000px) {
+  body {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 48px;
+  }
+}
+
+/* 할 일 카드 */
+.card {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+/* 24시간 시계판: 아주 큰 원, 0이 맨 위, 12가 맨 아래 */
+.clock {
+  width: 100%;
+  max-width: 560px;
+  container-type: inline-size;
+}
+
+.clock-face {
+  position: relative;
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+/* 눈금 24개: 얇은 선 */
+.clock-face::before {
+  content: "";
+  position: absolute;
+  inset: 3%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from -0.4deg, var(--line) 0 0.8deg, transparent 0.8deg 15deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 3cqw), #000 calc(50% - 3cqw));
+  mask: radial-gradient(circle, transparent 0 calc(50% - 3cqw), #000 calc(50% - 3cqw));
+}
+
+/* 가운데 점: 청록 네온 */
+.clock-face::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3cqw;
+  height: 3cqw;
+  border-radius: 50%;
+  background: var(--neon);
+  box-shadow: var(--glow);
+  transform: translate(-50%, -50%);
+}
+
+/* 숫자 0~23: 15도씩 돌려 원 위에 놓고, 글자는 똑바로 세운다 */
+.clock-face li {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8cqw;
+  height: 8cqw;
+  display: grid;
+  place-items: center;
+  margin: -4cqw 0 0 -4cqw;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 4.6cqw;
+  line-height: 1;
+  transform: rotate(calc(var(--i) * 15deg)) translateY(-37cqw) rotate(calc(var(--i) * -15deg));
+}
+
+/* 0, 6, 12, 18은 조금 더 밝게 */
+.clock-face li:nth-child(6n + 1) {
+  color: var(--text);
+}
+
 /* 제목, 이름표, 목록, 개수는 한 줄을 다 차지 */
 h1,
 #subtitle,
-body > label,
+.card > label,
 #todo-list,
 #counts {
   grid-column: 1 / -1;
@@ -66,7 +150,7 @@ h1 {
   color: var(--text);
 }
 
-body > label {
+.card > label {
   color: var(--muted);
   font-size: 0.9rem;
 }
@@ -269,9 +353,8 @@ body > label {
 
 /* 휴대폰 폭 */
 @media (max-width: 520px) {
-  body {
+  .card {
     gap: 12px 8px;
-    margin: 16px;
     padding: 20px 16px;
   }
 
