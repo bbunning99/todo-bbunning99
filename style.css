@@ -21,7 +21,7 @@ html {
 /* 페이지 전체를 하나의 카드로 */
 body {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 12px;
   max-width: 480px;
   margin: 32px auto;
@@ -89,6 +89,28 @@ body > label {
 #todo-input:focus {
   outline: none;
   border-color: var(--neon);
+  box-shadow: var(--glow);
+}
+
+/* 걸리는 시간 드롭다운: 입력칸과 같은 모양 */
+#time-select {
+  padding: 12px 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+#time-select:hover,
+#time-select:focus {
+  outline: none;
+  border-color: var(--neon);
+}
+
+#time-select:focus {
   box-shadow: var(--glow);
 }
 
@@ -183,6 +205,14 @@ body > label {
   text-decoration: line-through;
 }
 
+/* 목록의 걸리는 시간: 작게, 고정폭 글꼴 */
+.todo-time {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
 /* 삭제 버튼: 평소엔 흐리게, 손을 대면 청록으로 */
 .delete-button {
   display: grid;
@@ -240,7 +270,31 @@ body > label {
 /* 휴대폰 폭 */
 @media (max-width: 520px) {
   body {
+    gap: 12px 8px;
     margin: 16px;
     padding: 20px 16px;
+  }
+
+  #todo-input {
+    padding: 12px 10px;
+  }
+
+  #time-select {
+    padding: 12px 4px;
+  }
+
+  #add-button {
+    padding: 12px 14px;
+  }
+}
+
+/* 아주 좁은 휴대폰: 입력칸은 한 줄 전체, 시간과 추가 버튼은 그 아래 */
+@media (max-width: 380px) {
+  #todo-input {
+    grid-column: 1 / -1;
+  }
+
+  #time-select {
+    grid-column: 1 / 3;
   }
 }

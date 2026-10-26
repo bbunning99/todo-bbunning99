@@ -1,8 +1,10 @@
 // 화면에서 쓸 것들을 찾아 둔다
 const todoInput = document.getElementById('todo-input');
+const timeSelect = document.getElementById('time-select');
 const addButton = document.getElementById('add-button');
 const todoList = document.getElementById('todo-list');
 const remainingCount = document.getElementById('remaining-count');
+const remainingTime = document.getElementById('remaining-time');
 const doneCount = document.getElementById('done-count');
 
 // 브라우저에 저장할 때 쓰는 이름
@@ -10,9 +12,9 @@ const STORAGE_KEY = 'todos';
 
 // 처음 열었을 때 보여 줄 목록
 const START_TODOS = [
-  { text: '영어', done: false },
-  { text: '코딩', done: false },
-  { text: '블렌더', done: false }
+  { text: '영어', minutes: 10, done: false },
+  { text: '코딩', minutes: 10, done: false },
+  { text: '블렌더', minutes: 10, done: false }
 ];
 
 // 저장된 목록을 꺼낸다. 없으면 처음 목록을 쓴다.
@@ -20,13 +22,16 @@ function loadTodos() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      // 시간 기능 전에 저장한 할 일은 10분으로 본다
+      return JSON.parse(saved).map(function (todo) {
+        return { text: todo.text, minutes: todo.minutes || 10, done: todo.done };
+      });
     }
   } catch (error) {
     // 저장소를 못 쓰는 브라우저면 처음 목록으로 시작한다
   }
   return START_TODOS.map(function (todo) {
-    return { text: todo.text, done: todo.done };
+    return { text: todo.text, minutes: todo.minutes, done: todo.done };
   });
 }
 
@@ -58,6 +63,10 @@ function makeItem(todo, index) {
   text.className = 'todo-text';
   text.textContent = todo.text;
 
+  const time = document.createElement('span');
+  time.className = 'todo-time';
+  time.textContent = todo.minutes + '분';
+
   const deleteButton = document.createElement('button');
   deleteButton.type = 'button';
   deleteButton.className = 'delete-button';
@@ -66,7 +75,7 @@ function makeItem(todo, index) {
   deleteButton.dataset.index = index;
 
   label.append(check, text);
-  li.append(label, deleteButton);
+  li.append(label, time, deleteButton);
   return li;
 }
 
@@ -77,10 +86,17 @@ function render() {
     todoList.append(makeItem(todo, index));
   });
 
-  const done = todos.filter(function (todo) {
-    return todo.done;
-  }).length;
+  let done = 0;
+  let minutesLeft = 0;
+  todos.forEach(function (todo) {
+    if (todo.done) {
+      done = done + 1;
+    } else {
+      minutesLeft = minutesLeft + todo.minutes;
+    }
+  });
   remainingCount.textContent = todos.length - done;
+  remainingTime.textContent = minutesLeft;
   doneCount.textContent = done;
 }
 
@@ -91,7 +107,7 @@ addButton.addEventListener('click', function () {
     todoInput.focus();
     return;
   }
-  todos.push({ text: text, done: false });
+  todos.push({ text: text, minutes: Number(timeSelect.value), done: false });
   saveTodos();
   render();
   todoInput.value = '';
