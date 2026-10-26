@@ -234,6 +234,19 @@ h1 {
   pointer-events: none;
 }
 
+.arc-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 6;
+  stroke-linecap: round;
+  pointer-events: stroke;
+  cursor: grab;
+}
+
+.arc.removing {
+  opacity: 0.25;
+}
+
 .arc-line {
   fill: none;
   stroke: var(--neon);

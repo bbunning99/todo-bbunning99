@@ -121,19 +121,22 @@ function arcPoint(minutes, radius) {
 function makeArc() {
   const group = document.createElementNS(SVG_NS, 'g');
   group.setAttribute('class', 'arc');
+  const hit = document.createElementNS(SVG_NS, 'path'); // 잡기 쉽게 투명하고 넓은 띠
+  hit.setAttribute('class', 'arc-hit');
   const line = document.createElementNS(SVG_NS, 'path');
   line.setAttribute('class', 'arc-line');
   const label = document.createElementNS(SVG_NS, 'text');
   label.setAttribute('class', 'arc-label');
-  group.append(line, label);
-  return { group: group, line: line, label: label };
+  group.append(hit, line, label);
+  return { group: group, hit: hit, line: line, label: label };
 }
 
 // 시계에 올린 할 일의 띠를 모두 그린다 (이미 있는 띠는 모양만 고친다)
 function drawArcs() {
   const used = new Set();
   todos.forEach(function (todo, index) {
-    const start = preview && preview.index === index ? preview.start : todo.start;
+    const previewing = preview && preview.index === index;
+    const start = previewing ? preview.start : todo.start;
     if (start === null) {
       return;
     }
@@ -147,7 +150,11 @@ function drawArcs() {
     const radius = LANE_RADII[index % LANE_RADII.length];
     const from = arcPoint(start, radius);
     const to = arcPoint(start + todo.minutes, radius);
-    node.line.setAttribute('d', 'M ' + from[0] + ' ' + from[1] + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + to[0] + ' ' + to[1]);
+    const path = 'M ' + from[0] + ' ' + from[1] + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + to[0] + ' ' + to[1];
+    node.hit.setAttribute('d', path);
+    node.line.setAttribute('d', path);
+    node.group.dataset.index = index;
+    node.group.classList.toggle('removing', previewing && preview.removing === true);
     const middle = arcPoint(start + todo.minutes / 2, radius);
     node.label.setAttribute('x', middle[0]);
     node.label.setAttribute('y', middle[1]);
@@ -228,7 +235,7 @@ todoList.addEventListener('click', function (event) {
 });
 
 // ---- 상자를 끌어서 시계판에 놓기 ----
-let drag = null; // 끄는 중일 때만 { index, ghost, offsetX, offsetY, x, y, frame }
+let drag = null; // 끄는 중일 때만 { kind, index, grab, ghost, offsetX, offsetY, x, y, frame } (kind: 'box' 상자, 'arc' 띠)
 
 function clockInfo() {
   const rect = clockFace.getBoundingClientRect();
@@ -254,7 +261,16 @@ function updateDrag() {
   drag.ghost.style.top = drag.y - drag.offsetY + 'px';
   drag.ghost.classList.toggle('over-clock', inside);
   clockFace.classList.toggle('clock-active', inside);
-  preview = inside ? { index: drag.index, start: snapMinutes(pointerMinutes(drag.x, drag.y, info)) } : null;
+  if (inside) {
+    // 띠는 잡은 자리를 기준으로, 가운데 점을 중심으로 한 원 위에서 각도만 바뀐다
+    const minutes = pointerMinutes(drag.x, drag.y, info) - drag.grab;
+    preview = { index: drag.index, start: snapMinutes(((minutes % 1440) + 1440) % 1440) };
+  } else if (drag.kind === 'arc') {
+    // 시계 밖으로 끌어내는 중: 띠를 흐리게 해서 곧 빠진다는 걸 보여 준다
+    preview = { index: drag.index, start: todos[drag.index].start, removing: true };
+  } else {
+    preview = null;
+  }
   drawArcs();
   return inside;
 }
@@ -279,7 +295,7 @@ function onDragMove(event) {
   updateDrag();
 }
 
-// 끝내기: 시계 안에서 놓았으면 그 시각을 저장하고, 아니면 그대로 둔다
+// 끝내기: 시계 안에서 놓았으면 그 시각을 저장한다. 띠를 시계 밖에서 놓으면 시계에서 뺀다.
 function endDrag(event, save) {
   cancelAnimationFrame(drag.frame);
   window.removeEventListener('pointermove', onDragMove);
@@ -288,8 +304,11 @@ function endDrag(event, save) {
   if (save) {
     drag.x = event.clientX;
     drag.y = event.clientY;
-    if (updateDrag() && preview) {
+    if (updateDrag()) {
       todos[drag.index].start = preview.start;
+      saveTodos();
+    } else if (drag.kind === 'arc') {
+      todos[drag.index].start = null;
       saveTodos();
     }
   }
@@ -308,14 +327,9 @@ function onDragCancel(event) {
   endDrag(event, false);
 }
 
-// 손잡이를 잡으면 끌기 시작
-todoList.addEventListener('pointerdown', function (event) {
-  const handle = event.target.closest('.drag-handle');
-  if (!handle || drag || event.button > 0) {
-    return;
-  }
-  event.preventDefault();
-  const box = handle.closest('li');
+// 끌기 시작: 목록 상자 모양의 따라다니는 상자를 만든다
+function startDrag(kind, index, event, grab) {
+  const box = todoList.children[index];
   const rect = box.getBoundingClientRect();
   const ghost = box.cloneNode(true);
   ghost.classList.add('drag-ghost');
@@ -323,10 +337,12 @@ todoList.addEventListener('pointerdown', function (event) {
   todoList.append(ghost);
   box.classList.add('dragging');
   drag = {
-    index: Number(handle.dataset.index),
+    kind: kind,
+    index: index,
+    grab: grab,
     ghost: ghost,
-    offsetX: event.clientX - rect.left,
-    offsetY: event.clientY - rect.top,
+    offsetX: kind === 'box' ? event.clientX - rect.left : 24,
+    offsetY: kind === 'box' ? event.clientY - rect.top : rect.height / 2,
     x: event.clientX,
     y: event.clientY,
     frame: 0
@@ -336,6 +352,29 @@ todoList.addEventListener('pointerdown', function (event) {
   window.addEventListener('pointercancel', onDragCancel);
   updateDrag();
   drag.frame = requestAnimationFrame(dragFrame);
+}
+
+// 상자의 손잡이를 잡으면 끌기 시작
+todoList.addEventListener('pointerdown', function (event) {
+  const handle = event.target.closest('.drag-handle');
+  if (!handle || drag || event.button > 0) {
+    return;
+  }
+  event.preventDefault();
+  startDrag('box', Number(handle.dataset.index), event, 0);
+});
+
+// 시계판의 띠를 잡으면 끌기 시작 (잡은 자리와 띠 시작 시각의 차이를 기억해서 띠가 튀지 않게 한다)
+arcLayer.addEventListener('pointerdown', function (event) {
+  const group = event.target.closest('.arc');
+  if (!group || drag || event.button > 0) {
+    return;
+  }
+  event.preventDefault();
+  const index = Number(group.dataset.index);
+  const minutes = pointerMinutes(event.clientX, event.clientY, clockInfo());
+  const grab = ((minutes - todos[index].start + 2160) % 1440) - 720;
+  startDrag('arc', index, event, grab);
 });
 
 render();
