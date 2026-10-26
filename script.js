@@ -10,60 +10,94 @@ const clockFace = document.querySelector('.clock-face');
 const arcLayer = document.getElementById('clock-arcs');
 const sliceLayer = document.getElementById('clock-slices');
 
-// 브라우저에 저장할 때 쓰는 이름
-const STORAGE_KEY = 'todos';
+// ---- Supabase (todos 표) ----
+// 공개 키만 쓴다. 비밀 키는 이 파일에 절대 넣지 않는다.
+const SUPABASE_URL = 'https://ymbassdoclbsfdqwchit.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_4hGcBefkDkHrlojwY7py0Q_uDAVrj66';
 
-// 처음 열었을 때 보여 줄 목록
-const START_TODOS = [
-  { id: 0, text: '영어', minutes: 10, start: null, star: 0, done: false },
-  { id: 1, text: '코딩', minutes: 10, start: null, star: 0, done: false },
-  { id: 2, text: '블렌더', minutes: 10, start: null, star: 0, done: false }
-];
-
-// 저장된 목록을 꺼낸다. 없으면 처음 목록을 쓴다.
-function loadTodos() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      // 시간 기능 전에 저장한 할 일은 10분으로 본다. 시계에 안 올린 것은 start가 null.
-      return JSON.parse(saved).map(function (todo, index) {
-        return {
-          id: typeof todo.id === 'number' ? todo.id : index,
-          text: todo.text,
-          minutes: todo.minutes || 10,
-          start: typeof todo.start === 'number' ? todo.start : null,
-          star: typeof todo.star === 'number' ? todo.star : 0,
-          done: todo.done
-        };
-      });
-    }
-  } catch (error) {
-    // 저장소를 못 쓰는 브라우저면 처음 목록으로 시작한다
+// todos 표에 요청을 보낸다 (다른 사이트의 라이브러리 없이 fetch만 쓴다)
+async function callSupabase(query, method, body) {
+  const headers = { apikey: SUPABASE_KEY, Prefer: 'return=representation' };
+  if (body) {
+    headers['Content-Type'] = 'application/json';
   }
-  return START_TODOS.map(function (todo) {
-    return { id: todo.id, text: todo.text, minutes: todo.minutes, start: todo.start, star: todo.star, done: todo.done };
+  const response = await fetch(SUPABASE_URL + '/rest/v1/todos' + query, {
+    method: method,
+    headers: headers,
+    body: body ? JSON.stringify(body) : undefined
   });
+  if (!response.ok) {
+    throw new Error('Supabase ' + response.status + ': ' + (await response.text()));
+  }
+  return response.json();
 }
 
-// 지금 목록을 브라우저에 저장한다
-function saveTodos() {
+// 표의 한 줄을 고치거나 지운다. 바뀐 줄이 하나도 없으면(권한이 없을 때 등) 실패로 본다.
+async function changeRow(method, id, body) {
+  const rows = await callSupabase('?select=id&id=eq.' + encodeURIComponent(id), method, body);
+  if (rows.length === 0) {
+    throw new Error('표에서 바뀐 줄이 없어요. Supabase의 todos 표 권한(RLS 정책)을 확인해 주세요.');
+  }
+}
+
+// 저장하지 못했을 때 알려 준다
+function showError(what, error) {
+  console.error(error);
+  alert(what + ' 내용을 Supabase에 저장하지 못했어요. 인터넷 연결과 Supabase 설정을 확인해 주세요.');
+}
+
+// 표에 칸이 없는 것(걸리는 시간, 시계 시작 시각, 별표)은 이 브라우저에 할 일 id별로 따로 적어 둔다
+const EXTRAS_KEY = 'todo-extras';
+
+function loadExtras() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    return JSON.parse(localStorage.getItem(EXTRAS_KEY)) || {};
+  } catch (error) {
+    return {};
+  }
+}
+
+let extras = loadExtras();
+
+// 지금 목록의 걸리는 시간·시작 시각·별표를 브라우저에 적는다
+function saveExtras() {
+  todos.forEach(function (todo) {
+    extras[todo.id] = { minutes: todo.minutes, start: todo.start, star: todo.star };
+  });
+  try {
+    localStorage.setItem(EXTRAS_KEY, JSON.stringify(extras));
   } catch (error) {
     // 저장이 안 돼도 화면은 그대로 쓸 수 있다
   }
 }
 
-let todos = loadTodos();
-
-// 줄 세우기: 중요한 일이 맨 위 (나중에 별을 누른 것이 더 위), 나머지는 추가한 순서(id)대로
-function sortTodos() {
-  todos.sort(function (a, b) {
-    return b.star - a.star || a.id - b.id;
-  });
+// 표의 한 줄(id, text, done, created_at)을 화면에서 쓰는 할 일로 바꾼다
+function toTodo(row) {
+  const extra = extras[row.id] || {};
+  return {
+    id: row.id,
+    text: row.text,
+    done: row.done === true,
+    created: Date.parse(row.created_at) || 0,
+    minutes: extra.minutes || 10,
+    start: typeof extra.start === 'number' ? extra.start : null,
+    star: typeof extra.star === 'number' ? extra.star : 0
+  };
 }
 
-sortTodos();
+let todos = [];
+
+// 추가한 순서: 만든 시각이 빠른 것이 먼저
+function byCreation(a, b) {
+  return a.created - b.created || (String(a.id) < String(b.id) ? -1 : 1);
+}
+
+// 줄 세우기: 중요한 일이 맨 위 (나중에 별을 누른 것이 더 위), 나머지는 추가한 순서대로
+function sortTodos() {
+  todos.sort(function (a, b) {
+    return b.star - a.star || byCreation(a, b);
+  });
+}
 
 // 할 일 한 줄을 만든다 (index.html의 줄과 같은 모양)
 function makeItem(todo, index) {
@@ -161,6 +195,7 @@ function makeArc() {
 // 시계에 올린 할 일의 띠를 모두 그린다 (이미 있는 띠는 모양만 고친다)
 function drawArcs() {
   const used = new Set();
+  const creationOrder = todos.slice().sort(byCreation);
   todos.forEach(function (todo, index) {
     const previewing = preview && preview.index === index;
     const start = previewing ? preview.start : todo.start;
@@ -175,7 +210,7 @@ function drawArcs() {
       arcLayer.append(node.group);
       sliceLayer.append(node.slice);
     }
-    const radius = LANE_RADII[todo.id % LANE_RADII.length]; // 줄 순서가 바뀌어도 같은 줄에 머문다
+    const radius = LANE_RADII[creationOrder.indexOf(todo) % LANE_RADII.length]; // 추가한 순서로 줄을 정해서 별을 눌러도 같은 줄에 머문다
     const from = arcPoint(start, radius);
     const to = arcPoint(start + todo.minutes, radius);
     const path = 'M ' + from[0] + ' ' + from[1] + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + to[0] + ' ' + to[1];
@@ -224,21 +259,28 @@ function render() {
   drawArcs();
 }
 
-// 추가 버튼: 빈 칸이면 아무것도 하지 않는다
-addButton.addEventListener('click', function () {
+// 추가 버튼: 빈 칸이면 아무것도 하지 않는다. 표에 먼저 넣고, 들어갔으면 목록에 보인다.
+addButton.addEventListener('click', async function () {
   const text = todoInput.value.trim();
   if (text === '') {
     todoInput.focus();
     return;
   }
-  const newId = Math.max(-1, ...todos.map(function (todo) {
-    return todo.id;
-  })) + 1;
-  todos.push({ id: newId, text: text, minutes: Number(timeSelect.value), start: null, star: 0, done: false });
-  saveTodos();
-  render();
+  const minutes = Number(timeSelect.value);
   todoInput.value = '';
   todoInput.focus();
+  try {
+    const rows = await callSupabase('?select=id,text,done,created_at', 'POST', { text: text, done: false });
+    const todo = toTodo(rows[0]);
+    todo.minutes = minutes;
+    todos.push(todo);
+    sortTodos();
+    saveExtras();
+    render();
+  } catch (error) {
+    todoInput.value = text;
+    showError('추가한', error);
+  }
 });
 
 // 시간 드롭다운 위에서 휠을 굴리면 10분씩 바꾼다 (아래로 굴리면 늘고, 위로 굴리면 준다)
@@ -251,12 +293,17 @@ timeSelect.addEventListener('wheel', function (event) {
   }
 }, { passive: false });
 
-// 체크 상자: 완료 ↔ 안 함을 바꾼다
-todoList.addEventListener('change', function (event) {
+// 체크 상자: 완료 ↔ 안 함을 바꾼다. 표에 반영된 뒤에 화면을 다시 그린다.
+todoList.addEventListener('change', async function (event) {
   if (event.target.classList.contains('done-check')) {
-    const index = Number(event.target.dataset.index);
-    todos[index].done = event.target.checked;
-    saveTodos();
+    const todo = todos[Number(event.target.dataset.index)];
+    const done = event.target.checked;
+    try {
+      await changeRow('PATCH', todo.id, { done: done });
+      todo.done = done;
+    } catch (error) {
+      showError('체크한', error);
+    }
     render();
   }
 });
@@ -271,17 +318,23 @@ todoList.addEventListener('click', function (event) {
     }));
     todo.star = todo.star > 0 ? 0 : biggest + 1;
     sortTodos();
-    saveTodos();
+    saveExtras();
     render();
   }
 });
 
-// 삭제 버튼: 그 줄을 지운다
-todoList.addEventListener('click', function (event) {
+// 삭제 버튼: 표에서 지운 뒤에 목록에서도 지운다
+todoList.addEventListener('click', async function (event) {
   if (event.target.classList.contains('delete-button')) {
-    const index = Number(event.target.dataset.index);
-    todos.splice(index, 1);
-    saveTodos();
+    const todo = todos[Number(event.target.dataset.index)];
+    try {
+      await changeRow('DELETE', todo.id);
+      todos.splice(todos.indexOf(todo), 1);
+      delete extras[todo.id];
+      saveExtras();
+    } catch (error) {
+      showError('삭제한', error);
+    }
     render();
   }
 });
@@ -358,10 +411,10 @@ function endDrag(event, save) {
     drag.y = event.clientY;
     if (updateDrag()) {
       todos[drag.index].start = preview.start;
-      saveTodos();
+      saveExtras();
     } else if (drag.kind === 'arc') {
       todos[drag.index].start = null;
-      saveTodos();
+      saveExtras();
     }
   }
   drag.ghost.remove();
@@ -429,4 +482,19 @@ arcLayer.addEventListener('pointerdown', function (event) {
   startDrag('arc', index, event, grab);
 });
 
+// 처음 열면 빈 목록을 그려 두고, 표에서 목록을 불러온다
 render();
+
+async function loadFromSupabase() {
+  try {
+    const rows = await callSupabase('?select=id,text,done,created_at&order=created_at.asc', 'GET');
+    todos = rows.map(toTodo);
+    sortTodos();
+    render();
+  } catch (error) {
+    console.error(error);
+    alert('할 일 목록을 Supabase에서 불러오지 못했어요. 인터넷 연결과 Supabase 설정을 확인해 주세요.');
+  }
+}
+
+loadFromSupabase();
