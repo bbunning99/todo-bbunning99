@@ -14,9 +14,9 @@ const STORAGE_KEY = 'todos';
 
 // 처음 열었을 때 보여 줄 목록
 const START_TODOS = [
-  { text: '영어', minutes: 10, start: null, star: 0, done: false },
-  { text: '코딩', minutes: 10, start: null, star: 0, done: false },
-  { text: '블렌더', minutes: 10, start: null, star: 0, done: false }
+  { id: 0, text: '영어', minutes: 10, start: null, star: 0, done: false },
+  { id: 1, text: '코딩', minutes: 10, start: null, star: 0, done: false },
+  { id: 2, text: '블렌더', minutes: 10, start: null, star: 0, done: false }
 ];
 
 // 저장된 목록을 꺼낸다. 없으면 처음 목록을 쓴다.
@@ -25,8 +25,9 @@ function loadTodos() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       // 시간 기능 전에 저장한 할 일은 10분으로 본다. 시계에 안 올린 것은 start가 null.
-      return JSON.parse(saved).map(function (todo) {
+      return JSON.parse(saved).map(function (todo, index) {
         return {
+          id: typeof todo.id === 'number' ? todo.id : index,
           text: todo.text,
           minutes: todo.minutes || 10,
           start: typeof todo.start === 'number' ? todo.start : null,
@@ -39,7 +40,7 @@ function loadTodos() {
     // 저장소를 못 쓰는 브라우저면 처음 목록으로 시작한다
   }
   return START_TODOS.map(function (todo) {
-    return { text: todo.text, minutes: todo.minutes, start: todo.start, star: todo.star, done: todo.done };
+    return { id: todo.id, text: todo.text, minutes: todo.minutes, start: todo.start, star: todo.star, done: todo.done };
   });
 }
 
@@ -53,6 +54,15 @@ function saveTodos() {
 }
 
 let todos = loadTodos();
+
+// 줄 세우기: 중요한 일이 맨 위 (나중에 별을 누른 것이 더 위), 나머지는 추가한 순서(id)대로
+function sortTodos() {
+  todos.sort(function (a, b) {
+    return b.star - a.star || a.id - b.id;
+  });
+}
+
+sortTodos();
 
 // 할 일 한 줄을 만든다 (index.html의 줄과 같은 모양)
 function makeItem(todo, index) {
@@ -160,7 +170,7 @@ function drawArcs() {
       arcNodes.set(index, node);
       arcLayer.append(node.group);
     }
-    const radius = LANE_RADII[index % LANE_RADII.length];
+    const radius = LANE_RADII[todo.id % LANE_RADII.length]; // 줄 순서가 바뀌어도 같은 줄에 머문다
     const from = arcPoint(start, radius);
     const to = arcPoint(start + todo.minutes, radius);
     const path = 'M ' + from[0] + ' ' + from[1] + ' A ' + radius + ' ' + radius + ' 0 0 1 ' + to[0] + ' ' + to[1];
@@ -210,7 +220,10 @@ addButton.addEventListener('click', function () {
     todoInput.focus();
     return;
   }
-  todos.push({ text: text, minutes: Number(timeSelect.value), start: null, star: 0, done: false });
+  const newId = Math.max(-1, ...todos.map(function (todo) {
+    return todo.id;
+  })) + 1;
+  todos.push({ id: newId, text: text, minutes: Number(timeSelect.value), start: null, star: 0, done: false });
   saveTodos();
   render();
   todoInput.value = '';
@@ -246,6 +259,7 @@ todoList.addEventListener('click', function (event) {
       return item.star;
     }));
     todo.star = todo.star > 0 ? 0 : biggest + 1;
+    sortTodos();
     saveTodos();
     render();
   }
