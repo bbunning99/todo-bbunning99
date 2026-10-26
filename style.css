@@ -214,13 +214,13 @@ h1 {
   box-shadow: var(--glow);
 }
 
-/* 목록: 얇은 선으로 나눈 칸 */
+/* 목록: 할 일마다 따로 떨어진 상자 */
 #todo-list {
+  display: grid;
+  gap: 8px;
   margin: 8px 0 0;
   padding: 0;
   list-style: none;
-  border: 1px solid var(--line);
-  border-radius: 8px;
 }
 
 #todo-list li {
@@ -228,7 +228,9 @@ h1 {
   align-items: center;
   gap: 12px;
   padding: 10px 12px 10px 16px;
-  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 /* 체크 상자와 글자: 글자를 눌러도 체크됨 */
@@ -319,10 +321,6 @@ h1 {
   outline: none;
   border-color: var(--neon);
   color: var(--neon);
-}
-
-#todo-list li:last-child {
-  border-bottom: none;
 }
 
 /* 남은 개수는 왼쪽, 완료 개수는 오른쪽에 나란히 */
