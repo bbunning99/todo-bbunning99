@@ -135,13 +135,41 @@ body > label {
   cursor: pointer;
 }
 
+/* 동그란 체크 상자: 체크하면 청록으로 채워지고 V 표시 */
 .done-check {
-  width: 18px;
-  height: 18px;
+  appearance: none;
+  position: relative;
+  width: 20px;
+  height: 20px;
   margin: 0;
   flex-shrink: 0;
-  accent-color: var(--neon);
+  background: transparent;
+  border: 1.5px solid var(--muted);
+  border-radius: 50%;
   cursor: pointer;
+}
+
+.done-check:checked {
+  background: var(--neon);
+  border-color: var(--neon);
+  box-shadow: var(--glow);
+}
+
+.done-check:checked::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.done-check:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
 }
 
 .todo-text {
