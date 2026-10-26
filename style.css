@@ -234,6 +234,17 @@ h1 {
   pointer-events: none;
 }
 
+/* 피자 조각: 가운데 점부터 테두리까지 청록색을 반투명하게 채운다 (숫자는 비쳐 보임) */
+.arc-slice {
+  fill: var(--neon);
+  fill-opacity: 0.25;
+  stroke: none;
+}
+
+.arc-slice.removing {
+  opacity: 0.25;
+}
+
 .arc-hit {
   fill: none;
   stroke: transparent;

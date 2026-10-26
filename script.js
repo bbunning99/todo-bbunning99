@@ -8,6 +8,7 @@ const remainingTime = document.getElementById('remaining-time');
 const doneCount = document.getElementById('done-count');
 const clockFace = document.querySelector('.clock-face');
 const arcLayer = document.getElementById('clock-arcs');
+const sliceLayer = document.getElementById('clock-slices');
 
 // 브라우저에 저장할 때 쓰는 이름
 const STORAGE_KEY = 'todos';
@@ -132,6 +133,7 @@ function formatStart(start) {
 // 시계판은 24시간(1440분)이 한 바퀴(360도). 0이 맨 위, 시계 방향.
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const LANE_RADII = [36, 31, 26, 21, 16]; // 할 일마다 다른 반지름의 줄 (숫자보다 안쪽)
+const SLICE_RADIUS = 49.5; // 피자 조각은 가운데 점부터 시계 테두리 바로 안쪽까지
 const arcNodes = new Map(); // 할 일 번호 → 그려 둔 띠
 let preview = null; // 끄는 동안 잠깐 보여 줄 위치 { index, start }
 
@@ -151,7 +153,9 @@ function makeArc() {
   const label = document.createElementNS(SVG_NS, 'text');
   label.setAttribute('class', 'arc-label');
   group.append(hit, line, label);
-  return { group: group, hit: hit, line: line, label: label };
+  const slice = document.createElementNS(SVG_NS, 'path'); // 띠 아래에 깔리는 피자 조각
+  slice.setAttribute('class', 'arc-slice');
+  return { group: group, hit: hit, line: line, label: label, slice: slice };
 }
 
 // 시계에 올린 할 일의 띠를 모두 그린다 (이미 있는 띠는 모양만 고친다)
@@ -169,6 +173,7 @@ function drawArcs() {
       node = makeArc();
       arcNodes.set(index, node);
       arcLayer.append(node.group);
+      sliceLayer.append(node.slice);
     }
     const radius = LANE_RADII[todo.id % LANE_RADII.length]; // 줄 순서가 바뀌어도 같은 줄에 머문다
     const from = arcPoint(start, radius);
@@ -177,7 +182,12 @@ function drawArcs() {
     node.hit.setAttribute('d', path);
     node.line.setAttribute('d', path);
     node.group.dataset.index = index;
-    node.group.classList.toggle('removing', previewing && preview.removing === true);
+    const rimFrom = arcPoint(start, SLICE_RADIUS);
+    const rimTo = arcPoint(start + todo.minutes, SLICE_RADIUS);
+    node.slice.setAttribute('d', 'M 50 50 L ' + rimFrom[0] + ' ' + rimFrom[1] + ' A ' + SLICE_RADIUS + ' ' + SLICE_RADIUS + ' 0 0 1 ' + rimTo[0] + ' ' + rimTo[1] + ' Z');
+    const removing = previewing && preview.removing === true;
+    node.group.classList.toggle('removing', removing);
+    node.slice.classList.toggle('removing', removing);
     const middle = arcPoint(start + todo.minutes / 2, radius);
     node.label.setAttribute('x', middle[0]);
     node.label.setAttribute('y', middle[1]);
@@ -186,6 +196,7 @@ function drawArcs() {
   arcNodes.forEach(function (node, index) {
     if (!used.has(index)) {
       node.group.remove();
+      node.slice.remove();
       arcNodes.delete(index);
     }
   });
