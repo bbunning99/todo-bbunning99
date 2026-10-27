@@ -339,15 +339,15 @@ body {
   box-shadow: 0 0 8px rgba(0, 240, 216, 0.35);
 }
 
-/* 눈금 24개: 얇은 선 */
+/* 눈금 24개: 작고 짧은 선 (길이 1.2cqw, 폭 0.5도). closest-side는 100%가 원의 바깥 끝이라서 바깥쪽 1.2cqw만 남는다 */
 .clock-face::before {
   content: "";
   position: absolute;
   inset: 3%;
   border-radius: 50%;
-  background: repeating-conic-gradient(from -0.4deg, var(--line) 0 0.8deg, transparent 0.8deg 15deg);
-  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 0.4cqw), #000 calc(50% - 0.4cqw));
-  mask: radial-gradient(circle, transparent 0 calc(50% - 0.4cqw), #000 calc(50% - 0.4cqw));
+  background: repeating-conic-gradient(from -0.25deg, var(--muted) 0 0.5deg, transparent 0.5deg 15deg);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 1.2cqw), #000 calc(100% - 1.2cqw));
+  mask: radial-gradient(closest-side, transparent calc(100% - 1.2cqw), #000 calc(100% - 1.2cqw));
 }
 
 /* 가운데 점: 청록 네온 */
