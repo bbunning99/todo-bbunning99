@@ -6,7 +6,7 @@ const timeList = document.getElementById('time-list');
 const addButton = document.getElementById('add-button');
 const todoList = document.getElementById('todo-list');
 const remainingCount = document.getElementById('remaining-count');
-const remainingTime = document.getElementById('remaining-time');
+const totalTime = document.getElementById('total-time');
 const doneCount = document.getElementById('done-count');
 const clockFace = document.querySelector('.clock-face');
 const arcLayer = document.getElementById('clock-arcs');
@@ -287,6 +287,11 @@ function formatMinutes(minutes) {
   return rest === 0 ? hours + '시간' : hours + '시간 ' + rest + '분';
 }
 
+// 총 시간(분)을 '23시간 30분'처럼 적는다. 24시간을 넘게 합쳤으면 앞에 -를 붙인다
+function formatTotalTime(minutes) {
+  return minutes < 0 ? '-' + formatMinutes(-minutes) : formatMinutes(minutes);
+}
+
 // 시작 시각(0시부터 흐른 분)을 '14:30'처럼 숫자만 적는다
 function formatStart(start) {
   const minutes = start % 60;
@@ -374,17 +379,17 @@ function render() {
     todoList.append(makeItem(todo, index));
   });
 
+  // 총 시간 = 24시간 - 목록에 있는 모든 할 일의 시간 (체크한 것도 포함하므로 체크해도 안 바뀐다)
   let done = 0;
-  let minutesLeft = 0;
+  let usedMinutes = 0;
   todos.forEach(function (todo) {
+    usedMinutes = usedMinutes + todo.minutes;
     if (todo.done) {
       done = done + 1;
-    } else {
-      minutesLeft = minutesLeft + todo.minutes;
     }
   });
   remainingCount.textContent = todos.length - done;
-  remainingTime.textContent = minutesLeft;
+  totalTime.textContent = formatTotalTime(24 * 60 - usedMinutes);
   doneCount.textContent = done;
   drawArcs();
 }
