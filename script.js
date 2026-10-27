@@ -13,33 +13,154 @@ const arcLayer = document.getElementById('clock-arcs');
 const sliceLayer = document.getElementById('clock-slices');
 const board = document.querySelector('.board');
 const foldButton = document.getElementById('fold-button');
+const accountText = document.getElementById('account-text');
+const accountButton = document.getElementById('account-button');
+const authBackdrop = document.getElementById('auth-backdrop');
+const authEmail = document.getElementById('auth-email');
+const authPassword = document.getElementById('auth-password');
+const authMessage = document.getElementById('auth-message');
+const authLogin = document.getElementById('auth-login');
+const authSignup = document.getElementById('auth-signup');
+const authClose = document.getElementById('auth-close');
 
 // ---- Supabase ----
 // 공개 키만 쓴다. 비밀 키는 이 파일에 절대 넣지 않는다.
 const SUPABASE_URL = 'https://ymbassdoclbsfdqwchit.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_4hGcBefkDkHrlojwY7py0Q_uDAVrj66';
 
-// 로그인한 사람의 정보 { access_token, ... }. 로그인하지 않았으면 null (샘플 목록을 체험하는 중)
-let session = null;
+// 로그인 정보를 이 브라우저에 적어 두는 이름 (새로고침해도 로그인이 이어지게)
+const SESSION_KEY = 'todo-session';
+
+// 적어 둔 로그인 정보를 꺼낸다. 없으면 null
+function loadSession() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SESSION_KEY));
+    return saved && saved.access_token && saved.refresh_token ? saved : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// 로그인한 사람의 정보 { access_token, refresh_token, expires_at, email }. 로그인하지 않았으면 null (샘플 목록을 체험하는 중)
+let session = loadSession();
+
+// 로그인 정보를 바꾸고 브라우저에도 적어 둔다 (null이면 로그아웃)
+function storeSession(next) {
+  session = next;
+  try {
+    if (next) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+    } else {
+      localStorage.removeItem(SESSION_KEY);
+    }
+  } catch (error) {
+    // 저장이 안 돼도 이번 접속 동안은 로그인 상태로 쓸 수 있다
+  }
+}
 
 // 체험 중에 화면에서만 추가한 할 일에 붙이는 번호
 let localCount = 0;
 
-// 표에 요청을 보낸다 (다른 사이트의 라이브러리 없이 fetch만 쓴다)
-// table: 'todos'(로그인한 사람의 할 일) 또는 'sample_todos'(처음 화면의 샘플)
-async function callSupabase(table, query, method, body) {
-  const headers = { apikey: SUPABASE_KEY, Prefer: 'return=representation' };
-  if (session) {
-    headers.Authorization = 'Bearer ' + session.access_token;
+// 로그인·가입·로그아웃 요청을 보낸다 (Supabase 로그인 서버)
+async function callAuth(path, body, token) {
+  const headers = { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' };
+  if (token) {
+    headers.Authorization = 'Bearer ' + token;
   }
-  if (body) {
-    headers['Content-Type'] = 'application/json';
-  }
-  const response = await fetch(SUPABASE_URL + '/rest/v1/' + table + query, {
-    method: method,
+  const response = await fetch(SUPABASE_URL + '/auth/v1' + path, {
+    method: 'POST',
     headers: headers,
     body: body ? JSON.stringify(body) : undefined
   });
+  const text = await response.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (error) {
+    data = null;
+  }
+  if (!response.ok) {
+    const error = new Error((data && (data.msg || data.error_description || data.message)) || 'Auth ' + response.status);
+    error.status = response.status;
+    error.code = data && (data.error_code || data.code);
+    throw error;
+  }
+  return data;
+}
+
+// 로그인 서버의 답을 우리가 쓰는 로그인 정보로 바꾼다
+function toSession(data, email) {
+  return {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: data.expires_at || Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+    email: (data.user && data.user.email) || email || ''
+  };
+}
+
+// 로그인 유효 시간이 거의 끝나면 새로 받는다 (동시에 여러 번 부르면 한 번만 보낸다)
+let refreshing = null;
+function refreshSession() {
+  if (!refreshing) {
+    const email = session.email;
+    refreshing = callAuth('/token?grant_type=refresh_token', { refresh_token: session.refresh_token })
+      .then(function (data) {
+        storeSession(toSession(data, email));
+      })
+      .finally(function () {
+        refreshing = null;
+      });
+  }
+  return refreshing;
+}
+
+// 로그인이 끝내 만료됐을 때: 알려 주고 처음 화면(샘플 목록)으로 돌아간다
+function expireSession() {
+  if (!session) {
+    return;
+  }
+  storeSession(null);
+  updateAccount();
+  alert('로그인이 만료됐어요. 다시 로그인해 주세요.');
+  resetView();
+  loadFromSupabase();
+}
+
+// 표에 요청을 보낸다 (다른 사이트의 라이브러리 없이 fetch만 쓴다)
+// table: 'todos'(로그인한 사람의 할 일) 또는 'sample_todos'(처음 화면의 샘플)
+async function callSupabase(table, query, method, body) {
+  async function send() {
+    const headers = { apikey: SUPABASE_KEY, Prefer: 'return=representation' };
+    if (session) {
+      headers.Authorization = 'Bearer ' + session.access_token;
+    }
+    if (body) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return fetch(SUPABASE_URL + '/rest/v1/' + table + query, {
+      method: method,
+      headers: headers,
+      body: body ? JSON.stringify(body) : undefined
+    });
+  }
+  async function renew() {
+    try {
+      await refreshSession();
+    } catch (error) {
+      expireSession();
+      error.expired = true;
+      throw error;
+    }
+  }
+
+  if (session && session.expires_at - Date.now() / 1000 < 60) {
+    await renew();
+  }
+  let response = await send();
+  if (response.status === 401 && session) {
+    await renew();
+    response = await send();
+  }
   if (!response.ok) {
     throw new Error('Supabase ' + response.status + ': ' + (await response.text()));
   }
@@ -61,6 +182,9 @@ async function changeRow(method, id, body) {
 // 저장하지 못했을 때 알려 준다
 function showError(what, error) {
   console.error(error);
+  if (error.expired) {
+    return; // 로그인 만료 알림을 이미 띄웠다
+  }
   alert(what + ' 내용을 Supabase에 저장하지 못했어요. 인터넷 연결과 Supabase 설정을 확인해 주세요.');
 }
 
@@ -663,6 +787,7 @@ async function loadFromSupabase() {
   }
 }
 
+updateAccount();
 loadFromSupabase();
 
 // 체크 버튼: 할 일 카드를 접고 펼친다. 접으면 카드는 숨겨지고 시계판이 커진다. (새로고침하면 펼친 채로 시작)
@@ -673,4 +798,195 @@ foldButton.addEventListener('click', function () {
   foldButton.setAttribute('aria-expanded', folded ? 'false' : 'true');
   foldButton.setAttribute('aria-label', label);
   foldButton.title = label;
+});
+
+// ---- 계정 줄과 로그인 창 ----
+
+// 계정 줄을 지금 상태에 맞게 바꾼다
+function updateAccount() {
+  if (session) {
+    accountText.textContent = session.email || '로그인했어요';
+    accountText.classList.add('logged-in');
+    accountButton.textContent = '로그아웃';
+  } else {
+    accountText.textContent = '체험 중이에요. 새로고침하면 사라져요. 로그인하면 내 할 일이 저장돼요.';
+    accountText.classList.remove('logged-in');
+    accountButton.textContent = '로그인';
+  }
+}
+
+// 다른 목록을 불러오기 전에 지금 화면을 비운다
+function resetView() {
+  todos = [];
+  preview = null;
+  render();
+}
+
+// 로그인 창 안의 글 (ok가 true면 청록색 안내, 아니면 이유)
+function setAuthMessage(text, ok) {
+  authMessage.textContent = text ? (ok ? '' : '⚠ ') + text : '';
+  authMessage.classList.toggle('ok', ok === true);
+}
+
+function setAuthBusy(busy) {
+  authLogin.disabled = busy;
+  authSignup.disabled = busy;
+}
+
+function openAuth() {
+  setAuthMessage('', false);
+  authBackdrop.hidden = false;
+  authEmail.focus();
+}
+
+function closeAuth() {
+  authBackdrop.hidden = true;
+  authPassword.value = '';
+  accountButton.focus();
+}
+
+// 로그인·가입이 안 됐을 때 이유를 쉬운 말로 바꾼다
+function authErrorText(error) {
+  const text = ((error.code || '') + ' ' + (error.message || '')).toLowerCase();
+  if (text.includes('invalid_credentials') || text.includes('invalid login')) {
+    return '이메일이나 비밀번호가 맞지 않아요.';
+  }
+  if (text.includes('user_already_exists') || text.includes('already registered')) {
+    return '이미 가입된 이메일이에요. 로그인해 주세요.';
+  }
+  if (text.includes('weak_password') || text.includes('at least')) {
+    return '비밀번호는 6자 이상으로 해 주세요.';
+  }
+  if (text.includes('email_not_confirmed') || text.includes('not confirmed')) {
+    return '이메일 확인이 필요해요. 받은 편지함의 확인 메일 링크를 눌러 주세요.';
+  }
+  if (text.includes('email_address_invalid') || text.includes('validate email') || text.includes('invalid format')) {
+    return '이메일 모양이 맞지 않아요.';
+  }
+  if (text.includes('signup_disabled')) {
+    return '지금은 가입을 받지 않아요.';
+  }
+  if (error.status === 429 || text.includes('rate_limit') || text.includes('rate limit')) {
+    return '요청이 너무 많아요. 잠시 뒤에 다시 해 주세요.';
+  }
+  if (error instanceof TypeError) {
+    return '인터넷 연결을 확인해 주세요.';
+  }
+  return '잠시 뒤에 다시 해 주세요.';
+}
+
+// 로그인에 성공하면 창을 닫고 내 할 일을 불러온다
+async function startSession(data, email) {
+  storeSession(toSession(data, email));
+  closeAuth();
+  updateAccount();
+  resetView();
+  await loadFromSupabase();
+}
+
+// '로그인' 또는 '가입하기'
+async function submitAuth(kind) {
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  if (email === '' || password === '') {
+    setAuthMessage('이메일과 비밀번호를 입력해 주세요.', false);
+    return;
+  }
+  setAuthBusy(true);
+  setAuthMessage('', false);
+  try {
+    if (kind === 'signup') {
+      const data = await callAuth('/signup', { email: email, password: password });
+      if (!data || !data.access_token) {
+        setAuthMessage('확인 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인해 주세요.', true);
+        return;
+      }
+      await startSession(data, email);
+    } else {
+      const data = await callAuth('/token?grant_type=password', { email: email, password: password });
+      await startSession(data, email);
+    }
+  } catch (error) {
+    console.error(error);
+    setAuthMessage(authErrorText(error), false);
+  } finally {
+    setAuthBusy(false);
+  }
+}
+
+// 로그아웃: 이 브라우저에서 바로 로그아웃하고 처음 화면(샘플 목록)으로 돌아간다
+async function logout() {
+  const token = session.access_token;
+  storeSession(null);
+  updateAccount();
+  resetView();
+  loadFromSupabase();
+  try {
+    await callAuth('/logout?scope=local', null, token); // 이 기기의 로그인만 끝낸다
+  } catch (error) {
+    console.error(error); // 서버에서 못 끝내도 이 브라우저는 이미 로그아웃된 상태
+  }
+}
+
+accountButton.addEventListener('click', function () {
+  if (session) {
+    logout();
+  } else {
+    openAuth();
+  }
+});
+
+authLogin.addEventListener('click', function () {
+  submitAuth('login');
+});
+
+authSignup.addEventListener('click', function () {
+  submitAuth('signup');
+});
+
+authClose.addEventListener('click', closeAuth);
+
+// 창 바깥(어두운 부분)을 누르면 닫힌다
+authBackdrop.addEventListener('click', function (event) {
+  if (event.target === authBackdrop) {
+    closeAuth();
+  }
+});
+
+// 입력칸에서 Enter를 누르면 로그인
+document.getElementById('auth-form').addEventListener('submit', function (event) {
+  event.preventDefault();
+});
+
+[authEmail, authPassword].forEach(function (input) {
+  input.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      submitAuth('login');
+    }
+  });
+});
+
+// Esc로 닫기, Tab이 창 밖으로 나가지 않게 하기
+document.addEventListener('keydown', function (event) {
+  if (authBackdrop.hidden) {
+    return;
+  }
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeAuth();
+  } else if (event.key === 'Tab') {
+    const items = [authClose, authEmail, authPassword, authLogin, authSignup].filter(function (item) {
+      return !item.disabled;
+    });
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
 });

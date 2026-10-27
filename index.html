@@ -9,6 +9,11 @@
 <body>
   <img class="logo-photo" src="https://ymbassdoclbsfdqwchit.supabase.co/storage/v1/object/public/Photos/todo-logo-raw.png.png" alt="할 일 목록 로고">
 
+  <div class="account" id="account">
+    <span id="account-text" class="account-text">체험 중이에요. 새로고침하면 사라져요. 로그인하면 내 할 일이 저장돼요.</span>
+    <button type="button" id="account-button" class="account-button">로그인</button>
+  </div>
+
   <div class="board">
     <div class="todo-panel">
       <button type="button" id="fold-button" class="fold-button" aria-expanded="true" aria-controls="todo-card" aria-label="할 일 목록 접기" title="할 일 목록 접기">
@@ -118,6 +123,24 @@
         <g id="clock-arcs"></g>
       </svg>
     </section>
+  </div>
+
+  <div class="auth-backdrop" id="auth-backdrop" hidden>
+    <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <button type="button" id="auth-close" class="auth-close" aria-label="닫기">×</button>
+      <h2 id="auth-title">로그인</h2>
+      <form id="auth-form" novalidate>
+        <label for="auth-email">이메일</label>
+        <input type="email" id="auth-email" autocomplete="email" placeholder="이메일을 적어 주세요">
+        <label for="auth-password">비밀번호</label>
+        <input type="password" id="auth-password" autocomplete="current-password" placeholder="비밀번호 (6자 이상)">
+        <p id="auth-message" class="auth-message" role="status"></p>
+        <div class="auth-actions">
+          <button type="button" id="auth-login" class="auth-primary">로그인</button>
+          <button type="button" id="auth-signup" class="auth-secondary">가입하기</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="script.js"></script>

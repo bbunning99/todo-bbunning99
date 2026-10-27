@@ -31,6 +31,188 @@ body {
   line-height: 1.5;
 }
 
+/* 계정 줄: 로고 아래 가운데. 로그인 전엔 체험 안내와 로그인 버튼, 로그인 뒤엔 내 이메일과 로그아웃 버튼 */
+.account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  width: 100%;
+  max-width: 760px;
+  margin: -16px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.account-text {
+  overflow-wrap: anywhere;
+}
+
+.account-text.logged-in {
+  color: var(--text);
+}
+
+.account-button {
+  padding: 6px 14px;
+  color: var(--neon);
+  background: transparent;
+  border: 1px solid var(--neon);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.account-button:hover,
+.account-button:focus-visible {
+  outline: none;
+  box-shadow: var(--glow);
+}
+
+/* 로그인 창: 화면 가운데에 뜨는 작은 카드, 뒤 화면은 어둡게 덮는다 */
+.auth-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.auth-backdrop[hidden] {
+  display: none;
+}
+
+.auth-modal {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+  background: var(--card);
+  border: 1px solid var(--neon);
+  border-radius: 12px;
+  box-shadow: var(--glow), 0 0 40px rgba(0, 240, 216, 0.25);
+}
+
+.auth-modal h2 {
+  margin: 0 0 16px;
+  color: var(--neon);
+  font-size: 1.2rem;
+}
+
+.auth-modal label {
+  display: block;
+  margin: 12px 0 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.auth-modal input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.auth-modal input::placeholder {
+  color: var(--muted);
+}
+
+.auth-modal input:focus {
+  outline: none;
+  border-color: var(--neon);
+  box-shadow: var(--glow);
+}
+
+.auth-message {
+  min-height: 1.4em;
+  margin: 12px 0 0;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.auth-message.ok {
+  color: var(--neon);
+}
+
+.auth-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.auth-primary,
+.auth-secondary {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.auth-primary {
+  color: var(--neon);
+  border: 1px solid var(--neon);
+}
+
+.auth-secondary {
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.auth-primary:hover,
+.auth-primary:focus-visible {
+  outline: none;
+  box-shadow: var(--glow);
+}
+
+.auth-secondary:hover,
+.auth-secondary:focus-visible {
+  outline: none;
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.auth-primary:disabled,
+.auth-secondary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.auth-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.auth-close:hover,
+.auth-close:focus-visible {
+  outline: none;
+  color: var(--neon);
+  border-color: var(--neon);
+}
+
 /* 할 일 카드와 시계판: 좁은 화면은 위아래(카드 위, 시계 아래), 넓은 화면은 나란히(카드 왼쪽, 시계 오른쪽) */
 .board {
   display: flex;
