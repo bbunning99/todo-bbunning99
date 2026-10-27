@@ -267,13 +267,11 @@ function makeItem(todo, index) {
   meta.append(time, starButton, deleteButton);
 
   li.append(handle, label, meta);
-  // 시작 시각(시계에 올린 것만)은 상자 바깥 왼쪽 공백에 보인다. 안 올렸으면 공백으로 둔다.
-  if (todo.start !== null) {
-    const start = document.createElement('span');
-    start.className = 'todo-start';
-    start.textContent = formatStart(todo.start);
-    li.prepend(start);
-  }
+  // 시작 시각은 상자 바깥 왼쪽 자리에 보인다. 시계에 안 올렸으면 흐린 색 00:00
+  const start = document.createElement('span');
+  start.className = todo.start === null ? 'todo-start unplaced' : 'todo-start';
+  start.textContent = formatStart(todo.start === null ? 0 : todo.start);
+  li.prepend(start);
   return li;
 }
 
@@ -292,10 +290,11 @@ function formatTotalTime(minutes) {
   return minutes < 0 ? '-' + formatMinutes(-minutes) : formatMinutes(minutes);
 }
 
-// 시작 시각(0시부터 흐른 분)을 '14:30'처럼 숫자만 적는다
+// 시작 시각(0시부터 흐른 분)을 '06:05', '14:30'처럼 시와 분을 두 자리씩 숫자만 적는다
 function formatStart(start) {
+  const hours = Math.floor(start / 60);
   const minutes = start % 60;
-  return Math.floor(start / 60) + ':' + (minutes < 10 ? '0' : '') + minutes;
+  return (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes;
 }
 
 // ---- 시계판 ----

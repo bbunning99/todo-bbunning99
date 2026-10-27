@@ -721,6 +721,11 @@ h1 {
   white-space: nowrap;
 }
 
+/* 아직 시계에 올리지 않은 할 일의 00:00은 흐린 색 */
+.todo-start.unplaced {
+  color: var(--muted);
+}
+
 /* 체크 상자와 글자: 글자를 눌러도 체크됨 */
 .todo-item {
   display: flex;
