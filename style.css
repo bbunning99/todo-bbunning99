@@ -334,8 +334,9 @@ body {
   padding: 0;
   list-style: none;
   background: var(--card);
-  border: 1px solid var(--line);
+  border: 2px solid var(--neon);
   border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 240, 216, 0.35);
 }
 
 /* 눈금 24개: 얇은 선 */
@@ -579,8 +580,7 @@ h1 {
 
 /* 시계판 위에 올린 할 일 띠 (호) */
 .clock-face.clock-active {
-  border-color: var(--neon);
-  box-shadow: var(--glow);
+  box-shadow: 0 0 18px rgba(0, 240, 216, 0.85), inset 0 0 14px rgba(0, 240, 216, 0.25);
 }
 
 .clock-arcs {
