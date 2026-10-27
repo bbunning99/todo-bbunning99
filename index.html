@@ -10,7 +10,10 @@
   <img class="logo-photo" src="https://ymbassdoclbsfdqwchit.supabase.co/storage/v1/object/public/Photos/todo-logo-raw.png.png" alt="할 일 목록 로고">
 
   <div class="account" id="account">
-    <span id="account-text" class="account-text">체험 중이에요. 새로고침하면 사라져요. 로그인하면 내 할 일이 저장돼요.</span>
+    <span id="account-text" class="account-text"> 
+      <span id="account-line1">체험 중이에요. 새로고침하면 사라져요.</span>
+  <span id="account-line2">로그인하면 내 할 일이 저장돼요.</span>
+    </span>
     <button type="button" id="account-button" class="account-button">로그인</button>
   </div>
 
@@ -21,7 +24,7 @@
       </button>
       <main class="card" id="todo-card">
         <h1>할 일 목록</h1>
-        <p id="subtitle" contenteditable="true" spellcheck="false">(이번 주 공부할 것)</p>
+        <p id="subtitle" contenteditable="true" spellcheck="false">(오늘의 목표)</p>
 
         <label for="todo-input">할 일</label>
         <input type="text" id="todo-input" placeholder="할 일을 적어 주세요">
