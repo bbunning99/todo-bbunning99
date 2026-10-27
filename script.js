@@ -579,6 +579,9 @@ async function saveStar(todo, star) {
   todo.star = star;
   sortTodos();
   render();
+  if (star > 0) {
+    todoList.scrollTop = 0; // 별을 켠 상자는 맨 위로 가니까 목록 칸도 맨 위로 올려서 보이게 한다
+  }
   try {
     await changeRow('PATCH', todo.id, { star: star });
   } catch (error) {

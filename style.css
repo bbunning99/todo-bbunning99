@@ -645,11 +645,33 @@ h1 {
 
 /* 목록: 할 일마다 따로 떨어진 상자. 왼쪽 3rem은 시작 시각을 적는 공백 */
 #todo-list {
+  --row: 54px; /* 상자 한 개의 높이 */
   display: grid;
   gap: 8px;
+  align-content: start; /* 상자가 4개보다 적어도 늘어나지 않고 아래는 빈 공간으로 둔다 */
+  box-sizing: border-box;
+  height: calc(var(--row) * 4 + 8px * 3); /* 상자 4개가 들어가는 높이로 고정 */
   margin: 8px 0 0;
   padding: 0 0 0 3rem;
+  overflow-y: auto; /* 4개를 넘으면 이 칸 안에서 스크롤 */
+  overscroll-behavior: contain;
   list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--neon) var(--bg);
+  scrollbar-gutter: stable;
+}
+
+#todo-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+#todo-list::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+#todo-list::-webkit-scrollbar-thumb {
+  background: var(--neon);
+  border-radius: 4px;
 }
 
 /* 상자를 기준으로 시작 시각을 상자 바깥에 놓는다 (:where는 다른 규칙을 이기지 않는다) */
@@ -874,6 +896,7 @@ h1 {
 .count {
   font-family: var(--mono);
   color: var(--text);
+  line-height: 1; /* 글꼴이 달라도 줄 높이가 흔들리지 않게 */
 }
 
 /* 휴대폰 폭 */
@@ -901,9 +924,11 @@ h1 {
     gap: 8px;
   }
 
-  /* 상자 폭을 지키려고 왼쪽 공백을 조금 줄이고, 시작 시각이 카드 안쪽 여백으로 살짝 나오게 한다 */
+  /* 상자 폭을 지키려고 왼쪽 공백을 조금 줄인다. 시작 시각이 목록 칸 밖으로 잘리지 않게 칸을 6px 왼쪽으로 넓힌다 */
   #todo-list {
-    padding-left: 2.5rem;
+    --row: 52px;
+    margin-left: -6px;
+    padding-left: calc(2.5rem + 6px);
   }
 
   .todo-start {
@@ -914,6 +939,19 @@ h1 {
   .delete-button {
     width: 30px;
     height: 30px;
+  }
+
+  /* 개수와 총 시간 줄: 글이 길어 두 줄이 될 수 있어서 두 줄 높이를 늘 확보해 카드 높이가 흔들리지 않게 한다 */
+  #counts {
+    align-items: flex-start;
+    min-height: calc(17px + 2 * 1.35rem);
+  }
+}
+
+/* 아주 좁은 폭(355px 이하)에서는 상자가 두 줄이 되므로 목록 칸의 4개 높이도 그만큼 키운다 */
+@media (max-width: 355px) {
+  #todo-list {
+    --row: 90px;
   }
 }
 
