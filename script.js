@@ -14,18 +14,28 @@ const sliceLayer = document.getElementById('clock-slices');
 const board = document.querySelector('.board');
 const foldButton = document.getElementById('fold-button');
 
-// ---- Supabase (todos 표) ----
+// ---- Supabase ----
 // 공개 키만 쓴다. 비밀 키는 이 파일에 절대 넣지 않는다.
 const SUPABASE_URL = 'https://ymbassdoclbsfdqwchit.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_4hGcBefkDkHrlojwY7py0Q_uDAVrj66';
 
-// todos 표에 요청을 보낸다 (다른 사이트의 라이브러리 없이 fetch만 쓴다)
-async function callSupabase(query, method, body) {
+// 로그인한 사람의 정보 { access_token, ... }. 로그인하지 않았으면 null (샘플 목록을 체험하는 중)
+let session = null;
+
+// 체험 중에 화면에서만 추가한 할 일에 붙이는 번호
+let localCount = 0;
+
+// 표에 요청을 보낸다 (다른 사이트의 라이브러리 없이 fetch만 쓴다)
+// table: 'todos'(로그인한 사람의 할 일) 또는 'sample_todos'(처음 화면의 샘플)
+async function callSupabase(table, query, method, body) {
   const headers = { apikey: SUPABASE_KEY, Prefer: 'return=representation' };
+  if (session) {
+    headers.Authorization = 'Bearer ' + session.access_token;
+  }
   if (body) {
     headers['Content-Type'] = 'application/json';
   }
-  const response = await fetch(SUPABASE_URL + '/rest/v1/todos' + query, {
+  const response = await fetch(SUPABASE_URL + '/rest/v1/' + table + query, {
     method: method,
     headers: headers,
     body: body ? JSON.stringify(body) : undefined
@@ -37,8 +47,12 @@ async function callSupabase(query, method, body) {
 }
 
 // 표의 한 줄을 고치거나 지운다. 바뀐 줄이 하나도 없으면(권한이 없을 때 등) 실패로 본다.
+// 로그인하지 않았을 땐(체험 중) 저장하지 않는다. 화면만 바뀐다.
 async function changeRow(method, id, body) {
-  const rows = await callSupabase('?select=id&id=eq.' + encodeURIComponent(id), method, body);
+  if (!session) {
+    return;
+  }
+  const rows = await callSupabase('todos', '?select=id&id=eq.' + encodeURIComponent(id), method, body);
   if (rows.length === 0) {
     throw new Error('표에서 바뀐 줄이 없어요. Supabase의 todos 표 권한(RLS 정책)을 확인해 주세요.');
   }
@@ -261,8 +275,16 @@ addButton.addEventListener('click', async function () {
   const minutes = selectedMinutes();
   todoInput.value = '';
   todoInput.focus();
+  if (!session) {
+    // 체험 중: 화면에서만 추가한다 (저장하지 않는다)
+    localCount = localCount + 1;
+    todos.push({ id: 'local-' + localCount, text: text, done: false, created: Date.now(), minutes: minutes, start: null, star: 0 });
+    sortTodos();
+    render();
+    return;
+  }
   try {
-    const rows = await callSupabase('?select=' + COLUMNS, 'POST', {
+    const rows = await callSupabase('todos', '?select=' + COLUMNS, 'POST', {
       text: text,
       done: false,
       minutes: minutes,
@@ -628,7 +650,10 @@ render();
 
 async function loadFromSupabase() {
   try {
-    const rows = await callSupabase('?select=' + COLUMNS + '&order=created_at.asc', 'GET');
+    // 로그인했으면 내 할 일, 아니면 처음 화면의 샘플 목록
+    const rows = session
+      ? await callSupabase('todos', '?select=' + COLUMNS + '&order=created_at.asc', 'GET')
+      : await callSupabase('sample_todos', '?select=' + COLUMNS + '&order=created_at.asc,id.asc', 'GET');
     todos = rows.map(toTodo);
     sortTodos();
     render();
