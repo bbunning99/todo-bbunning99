@@ -14,6 +14,8 @@ const sliceLayer = document.getElementById('clock-slices');
 const board = document.querySelector('.board');
 const foldButton = document.getElementById('fold-button');
 const accountText = document.getElementById('account-text');
+const accountLine1 = document.getElementById('account-line1');
+const accountLine2 = document.getElementById('account-line2');
 const accountButton = document.getElementById('account-button');
 const authBackdrop = document.getElementById('auth-backdrop');
 const authEmail = document.getElementById('auth-email');
@@ -809,11 +811,13 @@ foldButton.addEventListener('click', function () {
 // 계정 줄을 지금 상태에 맞게 바꾼다
 function updateAccount() {
   if (session) {
-    accountText.textContent = session.email || '로그인했어요';
+    accountLine1.textContent = session.email || '로그인했어요';
+    accountLine2.textContent = '';
     accountText.classList.add('logged-in');
     accountButton.textContent = '로그아웃';
   } else {
-    accountText.textContent = '체험 중이에요. 새로고침하면 사라져요. 로그인하면 내 할 일이 저장돼요.';
+    accountLine1.textContent = '체험 중이에요. 새로고침하면 사라져요.';
+    accountLine2.textContent = '로그인하면 내 할 일이 저장돼요.';
     accountText.classList.remove('logged-in');
     accountButton.textContent = '로그인';
   }
