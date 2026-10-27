@@ -226,7 +226,7 @@ body {
   width: 100%;
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 1120px) {
   .board {
     flex-direction: row;
     justify-content: center;
@@ -320,6 +320,15 @@ body {
   transition: max-width 0.25s ease;
 }
 
+/* 가로로 나란히 있을 때: 시계판 지름 = 할 일 카드 높이 (script.js가 --clock-size를 넣어 준다) */
+@media (min-width: 1120px) {
+  .board:not(.folded) .clock {
+    flex: 0 1 auto;
+    width: var(--clock-size, 100%);
+    max-width: var(--clock-size, 560px);
+  }
+}
+
 /* 카드를 접으면 시계판이 크게 */
 .board.folded .clock {
   max-width: 760px;
@@ -408,7 +417,7 @@ h1,
   border-radius: 12px;
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 1120px) {
   .logo-photo {
     max-width: 520px;
   }

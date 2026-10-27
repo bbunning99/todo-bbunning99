@@ -799,10 +799,28 @@ async function loadFromSupabase() {
 updateAccount();
 loadFromSupabase();
 
+// 가로로 나란히 있을 때(1120px 이상) 시계판의 지름을 할 일 카드의 높이에 맞춘다. (css가 --clock-size를 읽는다)
+const todoCard = document.getElementById('todo-card');
+const clockBox = document.querySelector('.clock');
+
+function fitClock() {
+  const sideBySide = window.matchMedia('(min-width: 1120px)').matches;
+  if (sideBySide && !board.classList.contains('folded')) {
+    clockBox.style.setProperty('--clock-size', Math.round(todoCard.getBoundingClientRect().height) + 'px');
+  } else {
+    clockBox.style.removeProperty('--clock-size');
+  }
+}
+
+new ResizeObserver(fitClock).observe(todoCard);
+window.addEventListener('resize', fitClock);
+fitClock();
+
 // 체크 버튼: 할 일 카드를 접고 펼친다. 접으면 카드는 숨겨지고 시계판이 커진다. (새로고침하면 펼친 채로 시작)
 foldButton.addEventListener('click', function () {
   const folded = !board.classList.contains('folded');
   board.classList.toggle('folded', folded);
+  fitClock();
   const label = folded ? '할 일 목록 열기' : '할 일 목록 접기';
   foldButton.setAttribute('aria-expanded', folded ? 'false' : 'true');
   foldButton.setAttribute('aria-label', label);
