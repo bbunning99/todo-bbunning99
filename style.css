@@ -50,6 +50,10 @@ body {
   overflow-wrap: anywhere;
 }
 
+.account-text span {
+  display: block;
+}
+
 .account-text.logged-in {
   color: var(--text);
 }
