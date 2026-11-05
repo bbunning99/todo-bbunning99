@@ -812,6 +812,16 @@ async function loadFromSupabase() {
     const next = { today: [], yesterday: [] };
     if (session) {
       const today = dayKey(0);
+      // 오전 3시가 지나 어제 것이 된 할 일은 시계에서 빼고, 이틀 전 것은 표에서 지운다
+      try {
+        await callSupabase('todos', '?select=id&day=lt.' + today + '&start_minute=not.is.null', 'PATCH', { start_minute: null });
+        await callSupabase('todos', '?select=id&day=lt.' + dayKey(1), 'DELETE');
+      } catch (error) {
+        if (error.expired) {
+          return; // 로그인이 만료돼서 이미 처음 화면을 불러왔다
+        }
+        console.error(error); // 정리하지 못해도 목록은 불러온다
+      }
       const rows = await callSupabase('todos', '?select=' + COLUMNS + ',day&day=gte.' + dayKey(1) + '&order=created_at.asc', 'GET');
       rows.forEach(function (row) {
         next[row.day >= today ? 'today' : 'yesterday'].push(toTodo(row));
@@ -839,6 +849,17 @@ async function loadFromSupabase() {
 
 updateAccount();
 loadFromSupabase();
+
+// 화면을 켜 둔 채 오전 3시가 지나면 1분 안에 목록을 다시 불러와서 할 일 목록을 어제 한 일 목록으로 넘긴다
+// (체험 화면은 날짜가 바뀌지 않는다)
+let loadedDay = dayKey(0);
+setInterval(function () {
+  const today = dayKey(0);
+  if (today !== loadedDay && session && !drag) {
+    loadedDay = today;
+    loadFromSupabase();
+  }
+}, 60 * 1000);
 
 // 가로로 나란히 있을 때(1120px 이상) 시계판의 지름을 할 일 카드의 높이에 맞춘다. (css가 --clock-size를 읽는다)
 const todoCard = document.getElementById('todo-card');
