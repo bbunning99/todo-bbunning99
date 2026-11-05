@@ -481,6 +481,10 @@ h1 {
   cursor: text;
 }
 
+#subtitle[contenteditable="false"] {
+  cursor: default;
+}
+
 #subtitle:focus {
   outline: none;
   border-bottom-color: var(--neon);

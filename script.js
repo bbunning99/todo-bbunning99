@@ -224,8 +224,16 @@ let view = 'today'; // 지금 보고 있는 목록
 // 지금 화면에 보이는 목록 (lists.today 또는 lists.yesterday와 같은 것)
 let todos = lists.today;
 
-// 목록별로 고친 부제목 (저장하지 않아서 새로고침하면 처음 글로 돌아간다)
-const subtitles = { today: subtitle.textContent, yesterday: '(어제 한 일)' };
+// 목록별 부제목. 로그인하면 오늘 것은 daily_notes 표에 저장하고, 어제 것은 거기서 읽어 온다. (체험 화면은 저장하지 않는다)
+const DEFAULT_SUBTITLES = { today: subtitle.textContent, yesterday: '(어제 한 일)' };
+const subtitles = { today: DEFAULT_SUBTITLES.today, yesterday: DEFAULT_SUBTITLES.yesterday };
+let savedSubtitle = subtitles.today; // 마지막으로 저장한(또는 불러온) 오늘 부제목
+
+// 지금 보는 목록의 부제목을 화면에 쓴다. 어제 한 일의 부제목은 고칠 수 없다.
+function showSubtitle() {
+  subtitle.textContent = subtitles[view];
+  subtitle.contentEditable = view === 'today' ? 'true' : 'false';
+}
 
 // 추가한 순서: 만든 시각이 빠른 것이 먼저
 function byCreation(a, b) {
@@ -810,6 +818,8 @@ async function loadFromSupabase() {
   try {
     // 로그인했으면 내 할 일(어제와 오늘 것), 아니면 처음 화면의 샘플 목록
     const next = { today: [], yesterday: [] };
+    subtitles.today = DEFAULT_SUBTITLES.today;
+    subtitles.yesterday = DEFAULT_SUBTITLES.yesterday;
     if (session) {
       const today = dayKey(0);
       // 오전 3시가 지나 어제 것이 된 할 일은 시계에서 빼고, 이틀 전 것은 표에서 지운다
@@ -821,6 +831,19 @@ async function loadFromSupabase() {
           return; // 로그인이 만료돼서 이미 처음 화면을 불러왔다
         }
         console.error(error); // 정리하지 못해도 목록은 불러온다
+      }
+      // 부제목도 같게: 이틀 전 것은 지우고, 오늘 것과 어제 것을 읽어 온다 (표가 아직 없으면 기본 글로 둔다)
+      try {
+        await callSupabase('daily_notes', '?day=lt.' + dayKey(1), 'DELETE');
+        const notes = await callSupabase('daily_notes', '?select=day,subtitle&day=gte.' + dayKey(1), 'GET');
+        notes.forEach(function (note) {
+          subtitles[note.day >= today ? 'today' : 'yesterday'] = note.subtitle;
+        });
+      } catch (error) {
+        if (error.expired) {
+          return;
+        }
+        console.error(error);
       }
       const rows = await callSupabase('todos', '?select=' + COLUMNS + ',day&day=gte.' + dayKey(1) + '&order=created_at.asc', 'GET');
       rows.forEach(function (row) {
@@ -840,12 +863,36 @@ async function loadFromSupabase() {
     sortList(next.yesterday);
     lists = next;
     todos = lists[view];
+    savedSubtitle = subtitles.today;
+    showSubtitle();
     render();
   } catch (error) {
     console.error(error);
     alert('할 일 목록을 Supabase에서 불러오지 못했어요. 인터넷 연결과 Supabase 설정을 확인해 주세요.');
   }
 }
+
+// 오늘 부제목을 다 고치고 다른 곳을 누르면(포커스가 빠지면) 오늘 날짜로 저장한다. 로그인했을 때만.
+subtitle.addEventListener('blur', async function () {
+  const text = subtitle.textContent;
+  if (view !== 'today' || !session || text === savedSubtitle) {
+    return;
+  }
+  savedSubtitle = text;
+  subtitles.today = text;
+  try {
+    const today = dayKey(0);
+    const updated = await callSupabase('daily_notes', '?day=eq.' + today, 'PATCH', { subtitle: text });
+    if (updated.length === 0) {
+      await callSupabase('daily_notes', '', 'POST', { day: today, subtitle: text });
+    }
+  } catch (error) {
+    if (!error.expired) {
+      console.error(error);
+      alert('부제목을 Supabase에 저장하지 못했어요. 인터넷 연결과 Supabase 설정을 확인해 주세요.');
+    }
+  }
+});
 
 updateAccount();
 loadFromSupabase();
@@ -919,13 +966,15 @@ function showView(next) {
   if (drag || next === view) {
     return;
   }
-  subtitles[view] = subtitle.textContent;
+  if (view === 'today') {
+    subtitles.today = subtitle.textContent;
+  }
   view = next;
   todos = lists[view];
   preview = null;
   const yesterday = view === 'yesterday';
   listTitle.textContent = yesterday ? '어제 한 일 목록' : '할 일 목록';
-  subtitle.textContent = subtitles[view];
+  showSubtitle();
   prevDay.hidden = yesterday;
   nextDay.hidden = !yesterday;
   todoCard.classList.toggle('yesterday', yesterday);
