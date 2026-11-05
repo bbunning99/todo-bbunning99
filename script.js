@@ -24,6 +24,10 @@ const authMessage = document.getElementById('auth-message');
 const authLogin = document.getElementById('auth-login');
 const authSignup = document.getElementById('auth-signup');
 const authClose = document.getElementById('auth-close');
+const prevDay = document.getElementById('prev-day');
+const nextDay = document.getElementById('next-day');
+const listTitle = document.getElementById('list-title');
+const subtitle = document.getElementById('subtitle');
 
 // ---- Supabase ----
 // 공개 키만 쓴다. 비밀 키는 이 파일에 절대 넣지 않는다.
@@ -206,7 +210,22 @@ function toTodo(row) {
   };
 }
 
-let todos = [];
+// ---- 오늘과 어제 ----
+// 하루는 한국 시각 오전 3시에 바뀐다. 한국 시각(+9시간)에서 3시간을 뺀 날짜가 그 날이다.
+// (예: 11월 5일 새벽 2시 59분은 아직 11월 4일) daysAgo가 0이면 오늘, 1이면 어제
+function dayKey(daysAgo) {
+  const shifted = new Date(Date.now() + (9 - 3) * 60 * 60 * 1000 - daysAgo * 24 * 60 * 60 * 1000);
+  return shifted.toISOString().slice(0, 10); // '2026-11-05'
+}
+
+// 할 일 목록(today)과 어제 한 일 목록(yesterday)
+let lists = { today: [], yesterday: [] };
+let view = 'today'; // 지금 보고 있는 목록
+// 지금 화면에 보이는 목록 (lists.today 또는 lists.yesterday와 같은 것)
+let todos = lists.today;
+
+// 목록별로 고친 부제목 (저장하지 않아서 새로고침하면 처음 글로 돌아간다)
+const subtitles = { today: subtitle.textContent, yesterday: '(어제 한 일)' };
 
 // 추가한 순서: 만든 시각이 빠른 것이 먼저
 function byCreation(a, b) {
@@ -214,10 +233,14 @@ function byCreation(a, b) {
 }
 
 // 줄 세우기: 중요한 일이 맨 위 (나중에 별을 누른 것이 더 위), 나머지는 추가한 순서대로
-function sortTodos() {
-  todos.sort(function (a, b) {
+function sortList(list) {
+  list.sort(function (a, b) {
     return b.star - a.star || byCreation(a, b);
   });
+}
+
+function sortTodos() {
+  sortList(todos);
 }
 
 // 할 일 한 줄을 만든다 (index.html의 줄과 같은 모양)
@@ -403,6 +426,7 @@ addButton.addEventListener('click', async function () {
     return;
   }
   const minutes = selectedMinutes();
+  const day = view === 'today' ? dayKey(0) : dayKey(1); // 보고 있는 목록의 날짜로 넣는다
   todoInput.value = '';
   todoInput.focus();
   if (!session) {
@@ -419,7 +443,8 @@ addButton.addEventListener('click', async function () {
       done: false,
       minutes: minutes,
       start_minute: null,
-      star: 0
+      star: 0,
+      day: day
     });
     todos.push(toTodo(rows[0]));
     sortTodos();
@@ -758,7 +783,7 @@ function startDrag(kind, index, event, grab) {
 // 상자의 손잡이를 잡으면 끌기 시작
 todoList.addEventListener('pointerdown', function (event) {
   const handle = event.target.closest('.drag-handle');
-  if (!handle || drag || event.button > 0) {
+  if (!handle || drag || event.button > 0 || view === 'yesterday') { // 어제 한 일은 시계에 올릴 수 없다
     return;
   }
   event.preventDefault();
@@ -783,12 +808,28 @@ render();
 
 async function loadFromSupabase() {
   try {
-    // 로그인했으면 내 할 일, 아니면 처음 화면의 샘플 목록
-    const rows = session
-      ? await callSupabase('todos', '?select=' + COLUMNS + '&order=created_at.asc', 'GET')
-      : await callSupabase('sample_todos', '?select=' + COLUMNS + '&order=created_at.asc,id.asc', 'GET');
-    todos = rows.map(toTodo);
-    sortTodos();
+    // 로그인했으면 내 할 일(어제와 오늘 것), 아니면 처음 화면의 샘플 목록
+    const next = { today: [], yesterday: [] };
+    if (session) {
+      const today = dayKey(0);
+      const rows = await callSupabase('todos', '?select=' + COLUMNS + ',day&day=gte.' + dayKey(1) + '&order=created_at.asc', 'GET');
+      rows.forEach(function (row) {
+        next[row.day >= today ? 'today' : 'yesterday'].push(toTodo(row));
+      });
+    } else {
+      const rows = await callSupabase('sample_todos', '?select=' + COLUMNS + ',yesterday&order=created_at.asc,id.asc', 'GET');
+      rows.forEach(function (row) {
+        next[row.yesterday === true ? 'yesterday' : 'today'].push(toTodo(row));
+      });
+    }
+    // 어제 한 일은 시계에 올라가 있지 않다
+    next.yesterday.forEach(function (todo) {
+      todo.start = null;
+    });
+    sortList(next.today);
+    sortList(next.yesterday);
+    lists = next;
+    todos = lists[view];
     render();
   } catch (error) {
     console.error(error);
@@ -846,10 +887,39 @@ function updateAccount() {
 
 // 다른 목록을 불러오기 전에 지금 화면을 비운다
 function resetView() {
-  todos = [];
+  lists = { today: [], yesterday: [] };
+  todos = lists[view];
   preview = null;
   render();
 }
+
+// ---- '<' '>' 버튼: 할 일 목록과 어제 한 일 목록을 오간다 ----
+function showView(next) {
+  if (drag || next === view) {
+    return;
+  }
+  subtitles[view] = subtitle.textContent;
+  view = next;
+  todos = lists[view];
+  preview = null;
+  const yesterday = view === 'yesterday';
+  listTitle.textContent = yesterday ? '어제 한 일 목록' : '할 일 목록';
+  subtitle.textContent = subtitles[view];
+  prevDay.hidden = yesterday;
+  nextDay.hidden = !yesterday;
+  todoCard.classList.toggle('yesterday', yesterday);
+  todoList.scrollTop = 0;
+  render(); // 어제 한 일 목록에는 시계에 올린 것이 없어서 시계판도 비워진다
+  (yesterday ? nextDay : prevDay).focus();
+}
+
+prevDay.addEventListener('click', function () {
+  showView('yesterday');
+});
+
+nextDay.addEventListener('click', function () {
+  showView('today');
+});
 
 // 로그인 창 안의 글 (ok가 true면 청록색 안내, 아니면 이유)
 function setAuthMessage(text, ok) {

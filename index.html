@@ -23,7 +23,11 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 L10 17.5 L19 7"/></svg>
       </button>
       <main class="card" id="todo-card">
-        <h1>할 일 목록</h1>
+        <div class="title-row">
+          <button type="button" id="prev-day" class="day-button" aria-label="어제 한 일 목록 보기" title="어제 한 일 목록">&lt;</button>
+          <h1 id="list-title">할 일 목록</h1>
+          <button type="button" id="next-day" class="day-button" aria-label="할 일 목록으로 돌아가기" title="할 일 목록" hidden>&gt;</button>
+        </div>
         <p id="subtitle" contenteditable="true" spellcheck="false">(오늘의 목표)</p>
 
         <label for="todo-input">할 일</label>
