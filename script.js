@@ -4,7 +4,6 @@ const timeSelect = document.getElementById('time-select'); // 걸리는 시간 �
 const timeCombo = document.getElementById('time-combo');
 const timeList = document.getElementById('time-list');
 const addButton = document.getElementById('add-button');
-const INPUT_PLACEHOLDER = todoInput.placeholder;
 const todoList = document.getElementById('todo-list');
 const remainingCount = document.getElementById('remaining-count');
 const totalTime = document.getElementById('total-time');
@@ -1017,7 +1016,6 @@ function showView(next) {
   todoInput.disabled = yesterday;
   timeSelect.disabled = yesterday;
   addButton.disabled = yesterday;
-  todoInput.placeholder = yesterday ? '어제 한 일은 추가할 수 없어요' : INPUT_PLACEHOLDER;
   todoList.scrollTop = 0;
   render(); // 어제 한 일 목록에는 시계에 올린 것이 없어서 시계판도 비워진다
   (yesterday ? nextDay : prevDay).focus();
