@@ -512,6 +512,32 @@ h1 {
   visibility: hidden;
 }
 
+/* 어제 한 일 목록: 입력·시간·추가는 흐리게 막고, 별표는 상태만 흐리게 보이며, 삭제 버튼은 감춘다 */
+#todo-input:disabled,
+.combo-button:disabled,
+#add-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.star-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.star-button:disabled:hover {
+  transform: none;
+}
+
+.star-button:disabled:not(.on):hover {
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+.card.yesterday .delete-button {
+  visibility: hidden;
+}
+
 /* 부제목: 제목보다 작게, 눌러서 바로 고칠 수 있음 */
 #subtitle {
   margin: -8px 0 4px;

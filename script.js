@@ -4,6 +4,7 @@ const timeSelect = document.getElementById('time-select'); // 걸리는 시간 �
 const timeCombo = document.getElementById('time-combo');
 const timeList = document.getElementById('time-list');
 const addButton = document.getElementById('add-button');
+const INPUT_PLACEHOLDER = todoInput.placeholder;
 const todoList = document.getElementById('todo-list');
 const remainingCount = document.getElementById('remaining-count');
 const totalTime = document.getElementById('total-time');
@@ -286,6 +287,7 @@ function makeItem(todo, index) {
   starButton.setAttribute('aria-pressed', todo.star > 0 ? 'true' : 'false');
   starButton.textContent = todo.star > 0 ? '★' : '☆';
   starButton.dataset.index = index;
+  starButton.disabled = view !== 'today'; // 어제 한 일 목록에서는 별표를 못 바꾼다
 
   const deleteButton = document.createElement('button');
   deleteButton.type = 'button';
@@ -293,6 +295,7 @@ function makeItem(todo, index) {
   deleteButton.setAttribute('aria-label', '삭제');
   deleteButton.textContent = '×';
   deleteButton.dataset.index = index;
+  deleteButton.disabled = view !== 'today'; // 어제 한 일 목록에서는 삭제할 수 없다
 
   label.append(check, text);
   // 오른쪽 묶음: 걸리는 시간, 별표, 삭제
@@ -430,6 +433,9 @@ function render() {
 
 // 추가 버튼: 빈 칸이면 아무것도 하지 않는다. 표에 먼저 넣고, 들어갔으면 목록에 보인다.
 addButton.addEventListener('click', async function () {
+  if (view !== 'today') {
+    return; // 어제 한 일 목록에는 추가할 수 없다
+  }
   const text = todoInput.value.trim();
   if (text === '') {
     todoInput.focus();
@@ -501,6 +507,9 @@ function markActive(index) {
 }
 
 function openTimeList() {
+  if (view !== 'today') {
+    return;
+  }
   timeList.hidden = false;
   timeSelect.setAttribute('aria-expanded', 'true');
   // 아래로 펼치면 화면 밖으로 나가는데 위에 자리가 더 있으면 위로 펼친다
@@ -584,6 +593,9 @@ timeCombo.addEventListener('keydown', function (event) {
 // 콤보 박스 위에서 휠을 굴리면 한 칸씩 바꾼다 (아래로 굴리면 다음 칸, 위로 굴리면 이전 칸)
 timeSelect.addEventListener('wheel', function (event) {
   event.preventDefault(); // 페이지가 같이 스크롤되지 않게 막는다
+  if (view !== 'today') {
+    return;
+  }
   const next = timeIndex + (event.deltaY > 0 ? 1 : -1);
   if (next >= 0 && next < timeOptions.length) {
     chooseTime(next);
@@ -630,7 +642,7 @@ async function saveStar(todo, star) {
 // 별표 버튼: 중요 표시를 켜고 끈다 (켤 때는 지금까지 누른 번호보다 큰 번호를 붙인다)
 todoList.addEventListener('click', function (event) {
   const button = event.target.closest('.star-button');
-  if (button) {
+  if (button && view === 'today') {
     const todo = todos[Number(button.dataset.index)];
     const biggest = Math.max(0, ...todos.map(function (item) {
       return item.star;
@@ -641,7 +653,7 @@ todoList.addEventListener('click', function (event) {
 
 // 삭제 버튼: 표에서 지운 뒤에 목록에서도 지운다
 todoList.addEventListener('click', async function (event) {
-  if (event.target.classList.contains('delete-button')) {
+  if (event.target.classList.contains('delete-button') && view === 'today') {
     const todo = todos[Number(event.target.dataset.index)];
     try {
       await changeRow('DELETE', todo.id);
@@ -1000,6 +1012,12 @@ function showView(next) {
   nextDay.hidden = !yesterday;
   clearButton.hidden = yesterday;
   todoCard.classList.toggle('yesterday', yesterday);
+  // 어제 한 일 목록에서는 입력칸·시간·추가 버튼을 막는다
+  closeTimeList();
+  todoInput.disabled = yesterday;
+  timeSelect.disabled = yesterday;
+  addButton.disabled = yesterday;
+  todoInput.placeholder = yesterday ? '어제 한 일은 추가할 수 없어요' : INPUT_PLACEHOLDER;
   todoList.scrollTop = 0;
   render(); // 어제 한 일 목록에는 시계에 올린 것이 없어서 시계판도 비워진다
   (yesterday ? nextDay : prevDay).focus();
