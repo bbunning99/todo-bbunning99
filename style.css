@@ -459,6 +459,37 @@ h1 {
   display: none;
 }
 
+/* '전체 삭제' 버튼: 제목 줄 오른쪽 끝, 작은 글자 버튼 (어제 한 일 목록에서는 숨김) */
+.clear-button {
+  margin-left: auto;
+  height: 32px;
+  padding: 0 10px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.clear-button[hidden] {
+  display: none;
+}
+
+.clear-button:hover:not(:disabled),
+.clear-button:focus-visible {
+  outline: none;
+  border-color: var(--neon);
+  color: var(--neon);
+}
+
+.clear-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .day-button:hover,
 .day-button:focus-visible {
   outline: none;

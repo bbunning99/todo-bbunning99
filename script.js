@@ -26,6 +26,7 @@ const authSignup = document.getElementById('auth-signup');
 const authClose = document.getElementById('auth-close');
 const prevDay = document.getElementById('prev-day');
 const nextDay = document.getElementById('next-day');
+const clearButton = document.getElementById('clear-button');
 const listTitle = document.getElementById('list-title');
 const subtitle = document.getElementById('subtitle');
 
@@ -406,6 +407,7 @@ function drawArcs() {
 
 // 목록과 개수를 다시 그린다
 function render() {
+  clearButton.disabled = todos.length === 0;
   todoList.replaceChildren();
   todos.forEach(function (todo, index) {
     todoList.append(makeItem(todo, index));
@@ -649,6 +651,25 @@ todoList.addEventListener('click', async function (event) {
     }
     render();
   }
+});
+
+// 전체 삭제 버튼: 한 번 물어본 뒤, 할 일 목록(오늘 것)을 표에서도 화면에서도 모두 지운다
+clearButton.addEventListener('click', async function () {
+  if (view !== 'today' || drag || todos.length === 0) {
+    return;
+  }
+  if (!confirm('할 일 ' + todos.length + '개를 모두 지울까요?')) {
+    return;
+  }
+  try {
+    if (session) {
+      await callSupabase('todos', '?select=id&day=gte.' + dayKey(0), 'DELETE');
+    }
+    lists.today.length = 0; // todos가 같은 배열이라 함께 비워진다
+  } catch (error) {
+    showError('전체 삭제한', error);
+  }
+  render();
 });
 
 // ---- 상자를 끌어서 시계판에 놓기 ----
@@ -977,6 +998,7 @@ function showView(next) {
   showSubtitle();
   prevDay.hidden = yesterday;
   nextDay.hidden = !yesterday;
+  clearButton.hidden = yesterday;
   todoCard.classList.toggle('yesterday', yesterday);
   todoList.scrollTop = 0;
   render(); // 어제 한 일 목록에는 시계에 올린 것이 없어서 시계판도 비워진다
