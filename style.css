@@ -40,7 +40,7 @@ body {
   gap: 8px 12px;
   width: 100%;
   max-width: 760px;
-  margin: -16px 0;
+  margin: -16px 0 16px; /* 아래는 시계·할 일 목록과 48px 떨어지게 */
   color: var(--muted);
   font-size: 0.9rem;
   text-align: center;
