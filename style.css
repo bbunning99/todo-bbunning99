@@ -1065,3 +1065,119 @@ h1 {
     width: auto;
   }
 }
+
+/* ---- 움직임: 스프링 ----
+   닫힌 식 스프링의 계단 응답을 linear()로 옮긴 것. 살짝만 넘쳤다 자리 잡는다(튀지 않게). */
+:root {
+  --spring: linear(0, 0.068, 0.22, 0.398, 0.569, 0.715, 0.829, 0.912, 0.967, 1.002, 1.02, 1.027, 1.028, 1.025, 1.02, 1.015, 1.011, 1.007, 1.004, 1.002, 1, 1, 1);
+  --spring-time: 0.45s;
+}
+
+/* 버튼류: 색·테두리는 스프링으로 바뀌고, 누르면 쏙 들어갔다 돌아온다 */
+.account-button,
+.auth-primary,
+.auth-secondary,
+.auth-close,
+.fold-button,
+.day-button,
+.clear-button,
+.combo-button,
+#add-button,
+.star-button,
+.delete-button {
+  transition: transform var(--spring-time) var(--spring), background-color var(--spring-time) var(--spring), border-color var(--spring-time) var(--spring), color var(--spring-time) var(--spring), box-shadow var(--spring-time) var(--spring), opacity var(--spring-time) var(--spring);
+}
+
+.account-button:active,
+.auth-primary:active:not(:disabled),
+.auth-secondary:active:not(:disabled),
+.clear-button:active:not(:disabled),
+.combo-button:active,
+#add-button:active {
+  transform: scale(0.95);
+}
+
+.fold-button:active,
+.day-button:active,
+.star-button:active,
+.delete-button:active,
+.auth-close:active {
+  transform: scale(0.88);
+}
+
+.fold-button:hover,
+.day-button:hover,
+.star-button:hover,
+.delete-button:hover {
+  transform: scale(1.06);
+}
+
+/* 체크 상자(동그란 토글): 색이 스프링으로 바뀌고 누르는 동안 작아진다 */
+.done-check {
+  transition: transform var(--spring-time) var(--spring), background-color var(--spring-time) var(--spring), border-color var(--spring-time) var(--spring), box-shadow var(--spring-time) var(--spring);
+}
+
+.done-check:active {
+  transform: scale(0.8);
+}
+
+/* 상자: 테두리 색이 부드럽게 */
+#todo-list li {
+  transition: border-color var(--spring-time) var(--spring);
+}
+
+/* 열릴 때: 로그인 창은 아래서 살짝 떠오르고, 콤보 목록은 위에서 펼쳐진다 */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.auth-backdrop:not([hidden]) {
+  animation: fade-in 0.25s ease-out;
+}
+
+.auth-backdrop:not([hidden]) .auth-modal {
+  animation: pop-in 0.5s var(--spring);
+}
+
+.combo-list:not([hidden]) {
+  transform-origin: top left;
+  animation: drop-in 0.35s var(--spring);
+}
+
+.combo-list.up:not([hidden]) {
+  transform-origin: bottom left;
+}
+
+/* 움직임을 줄이는 설정을 켠 사람에게는 움직임을 거의 없앤다 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
