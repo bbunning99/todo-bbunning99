@@ -702,24 +702,57 @@ function snapMinutes(minutes) {
   return (Math.round(minutes / 10) * 10) % 1440;
 }
 
+// 두 할 일의 시간이 겹치는지 (시작 분, 걸리는 분. 24시간이 한 바퀴라서 자정을 넘어도 맞다)
+function timesOverlap(start1, minutes1, start2, minutes2) {
+  return (start2 - start1 + 1440) % 1440 < minutes1 || (start1 - start2 + 1440) % 1440 < minutes2;
+}
+
+// 시계에 올린 다른 할 일과 겹치지 않는 시작 시각. 닿으면 그 할 일이 끝나는 시각으로 뛰어넘는다.
+// 하루 안에 들어갈 자리가 없으면 null
+function freeStart(index, start) {
+  const minutes = todos[index].minutes;
+  const others = todos.filter(function (todo, i) {
+    return i !== index && todo.start !== null;
+  });
+  const tried = new Set();
+  let candidate = start;
+  while (!tried.has(candidate)) {
+    tried.add(candidate);
+    const hit = others.find(function (todo) {
+      return timesOverlap(candidate, minutes, todo.start, todo.minutes);
+    });
+    if (!hit) {
+      return candidate;
+    }
+    candidate = (hit.start + hit.minutes) % 1440;
+  }
+  return null;
+}
+
 // 끄는 동안 매번: 상자 따라다니기, 시계 위면 띠 미리 보여 주기
 function updateDrag() {
   const info = clockInfo();
   const inside = Math.hypot(drag.x - info.cx, drag.y - info.cy) <= info.radius;
   drag.ghost.style.left = drag.x - drag.offsetX + 'px';
   drag.ghost.style.top = drag.y - drag.offsetY + 'px';
-  drag.ghost.classList.toggle('over-clock', inside);
   clockFace.classList.toggle('clock-active', inside);
   if (inside) {
     // 띠는 잡은 자리를 기준으로, 가운데 점을 중심으로 한 원 위에서 각도만 바뀐다
     const minutes = pointerMinutes(drag.x, drag.y, info) - drag.grab;
-    preview = { index: drag.index, start: snapMinutes(((minutes % 1440) + 1440) % 1440) };
+    const start = freeStart(drag.index, snapMinutes(((minutes % 1440) + 1440) % 1440));
+    if (start !== null) {
+      preview = { index: drag.index, start: start };
+    } else {
+      // 들어갈 자리가 없다: 띠는 원래 자리에 두고, 상자는 올라가지 않는다
+      preview = drag.kind === 'arc' ? { index: drag.index, start: todos[drag.index].start } : null;
+    }
   } else if (drag.kind === 'arc') {
     // 시계 밖으로 끌어내는 중: 띠를 흐리게 해서 곧 빠진다는 걸 보여 준다
     preview = { index: drag.index, start: todos[drag.index].start, removing: true };
   } else {
     preview = null;
   }
+  drag.ghost.classList.toggle('over-clock', inside && preview !== null);
   drawArcs();
   return inside;
 }
@@ -769,7 +802,9 @@ function endDrag(event, save) {
     drag.x = event.clientX;
     drag.y = event.clientY;
     if (updateDrag()) {
-      change = { todo: todos[drag.index], start: preview.start };
+      if (preview) {
+        change = { todo: todos[drag.index], start: preview.start };
+      }
     } else if (drag.kind === 'arc') {
       change = { todo: todos[drag.index], start: null };
     }
