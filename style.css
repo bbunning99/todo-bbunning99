@@ -429,21 +429,22 @@ body {
   grid-column: 1 / -1;
 }
 
-/* 맨 위 로고 사진: 카드·시계가 세로로 쌓였을 땐 화면 폭 가득 아주 크게(최대 760px), 가로로 나란할 땐 크게(최대 520px) */
-.logo-photo {
-  display: block;
-  width: 100%;
+/* 맨 위 머리글: '오늘의 할 일' 글자 ('할 일'에 노란 바탕) */
+.site-title {
+  margin: 0;
   max-width: 760px;
-  height: auto;
-  border: 3px solid var(--ink);
-  border-radius: 20px;
-  box-shadow: 6px 6px 0 var(--ink);
+  color: var(--ink);
+  font-size: clamp(2.2rem, 9vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  word-break: keep-all;
 }
 
-@media (min-width: 1120px) {
-  .logo-photo {
-    max-width: 520px;
-  }
+.site-title span {
+  padding: 0 0.2em;
+  background: var(--yellow);
+  border-radius: 12px;
 }
 
 h1 {
