@@ -13,6 +13,7 @@
   --pink: #ff6b9d;        /* 분홍 */
   --green: #19c895;       /* 초록 */
   --shadow: 3px 3px 0 var(--ink); /* 딱딱한(번지지 않는) 그림자 */
+  --field-height: 49px;   /* 입력칸·시간 상자·추가 버튼의 세로 길이(모두 같게) */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
 }
 
@@ -574,7 +575,8 @@ h1 {
 /* 입력칸과 추가 버튼은 한 줄에 나란히 */
 #todo-input {
   min-width: 0;
-  padding: 12px;
+  height: var(--field-height);
+  padding: 0 12px;
   background: var(--soft);
   border: 2px solid var(--ink);
   border-radius: 12px;
@@ -603,7 +605,8 @@ h1 {
   justify-content: space-between;
   gap: 8px;
   width: 100%;
-  padding: 12px 8px;
+  height: var(--field-height);
+  padding: 0 8px;
   background: var(--soft);
   border: 2px solid var(--ink);
   border-radius: 12px;
@@ -696,7 +699,8 @@ h1 {
 }
 
 #add-button {
-  padding: 12px 20px;
+  height: var(--field-height);
+  padding: 0 20px;
   background: var(--green);
   border: 2px solid var(--ink);
   border-radius: 12px;
@@ -1056,11 +1060,11 @@ h1 {
   }
 
   #todo-input {
-    padding: 12px 10px;
+    padding: 0 10px;
   }
 
   #add-button {
-    padding: 12px 14px;
+    padding: 0 14px;
   }
 
   /* 상자 안이 좁아서 간격과 버튼을 조금 줄인다 */
