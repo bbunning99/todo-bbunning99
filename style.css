@@ -787,27 +787,36 @@ h1 {
   align-content: start; /* 상자가 4개보다 적어도 늘어나지 않고 아래는 빈 공간으로 둔다 */
   box-sizing: border-box;
   height: calc(var(--row) * 4 + 8px * 3); /* 상자 4개가 들어가는 높이로 고정 */
-  margin: 8px 0 0;
-  padding: 0 0 0 3rem;
+  margin: 8px -18px 0 0; /* 오른쪽으로 18px 넓혀서 스크롤바(12px)와 여백(6px)이 카드의 안쪽 여백으로 나가게 한다 (상자 너비는 그대로) */
+  padding: 0 6px 0 3rem; /* 오른쪽 6px: 상자와 스크롤바 사이 여백 */
   overflow-y: auto; /* 4개를 넘으면 이 칸 안에서 스크롤 */
   overscroll-behavior: contain;
   list-style: none;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) var(--card);
   scrollbar-gutter: stable;
 }
 
+/* 스크롤바: 하얀 막대에 검은 테두리 (::-webkit-scrollbar가 되는 브라우저) */
 #todo-list::-webkit-scrollbar {
-  width: 8px;
+  width: 12px;
 }
 
 #todo-list::-webkit-scrollbar-track {
-  background: var(--card);
+  background: var(--soft);
+  border-radius: 999px;
 }
 
 #todo-list::-webkit-scrollbar-thumb {
-  background: var(--accent);
-  border-radius: 4px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+}
+
+/* 파이어폭스처럼 테두리를 못 그리는 브라우저는 검은 막대로 */
+@supports not selector(::-webkit-scrollbar) {
+  #todo-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink) var(--soft);
+  }
 }
 
 /* 상자를 기준으로 시작 시각을 상자 바깥에 놓는다 (:where는 다른 규칙을 이기지 않는다) */
@@ -1081,6 +1090,7 @@ h1 {
   #todo-list {
     --row: 52px;
     margin-left: -6px;
+    margin-right: -10px; /* 휴대폰은 카드 안쪽 여백이 16px이라 덜 넓힌다 */
     padding-left: calc(2.5rem + 6px);
   }
 
